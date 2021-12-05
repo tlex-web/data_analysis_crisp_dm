@@ -1,0 +1,3 @@
+https://github.com/ResidentMario/missingno
+https://www.ibm.com/docs/en/spss-modeler/18.2.2?topic=guide-data-preparation
+https://pandas.pydata.org/pandas-docs/stable/user_guide/missing_data.html
