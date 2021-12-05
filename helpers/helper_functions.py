@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 import plotly.graph_objects as go
 from plotly.missing_ipywidgets import FigureWidget
@@ -11,6 +11,9 @@ import plotly.express as px
 import plotly.offline as py
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 
+from keras import tensorflow
+
+import seaborn as sns
 import missingno as msno
 
 
