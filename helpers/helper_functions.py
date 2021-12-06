@@ -11,7 +11,6 @@ import plotly.express as px
 import plotly.offline as py
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 
-from keras import tensorflow
 
 import seaborn as sns
 import missingno as msno
@@ -101,6 +100,7 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
+    df.replace('NaN', np.NaN)
 
 def get_plotly_colors() -> FigureWidget:
     return px.colors.sequential.swatches()
