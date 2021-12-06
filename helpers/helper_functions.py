@@ -59,8 +59,7 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     df['age'] = df['age'].str.rstrip('.')
     # Age zu einem numerischen Datentyp casten
     # coerce': Wenn coerece, dann wird ungültiges Parsing als NaN gesetzt
-    df["age"] = pd.to_numeric(df["age"], errors='coerce')
-    df['age'] = df['age'].astype('Int64')
+    df["age"] = pd.to_numeric(df["age"], errors='coerce', downcast='float')
 
     # Annual Premium
     df['annual_premium'] = df['annual_premium'].astype(str)
@@ -100,7 +99,8 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
-    df.replace('NaN', np.NaN)
+    df.replace(to_replace=('NaN', np.nan, np.NaN, np.NAN), value=np.NaN)
+
 
 def get_plotly_colors() -> FigureWidget:
     return px.colors.sequential.swatches()
