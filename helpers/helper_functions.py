@@ -15,17 +15,17 @@ from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 import seaborn as sns
 import missingno as msno
 
-from sklearn.impute import SimpleImputer
-from sklearn.experimental import enable_iterative_imputer 
-from sklearn.impute import IterativeImputer
-from sklearn.linear_model import BayesianRidge
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.impute import KNNImputer
+# from sklearn.impute import SimpleImputer
+# from sklearn.experimental import enable_iterative_imputer
+# from sklearn.impute import IterativeImputer
+# from sklearn.linear_model import BayesianRidge
+# from sklearn.linear_model import LinearRegression
+# from sklearn.tree import DecisionTreeRegressor
+# from sklearn.ensemble import ExtraTreesRegressor
+# from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.impute import KNNImputer
 
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 
 
 def read_and_set_df(filepath: str) -> pd.DataFrame:
@@ -65,13 +65,10 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     # Nullable Interger
 
     # Variable Age
-    # Im ersten Schritt setzen wir alle Werte als String
-    df['age'] = df['age'].astype(str)
-    # Dann entfernen wir den doppelten Punkt in den betreffenden Werten
-    df['age'] = df['age'].str.rstrip('.')
-    # Age zu einem numerischen Datentyp casten
-    # coerce': Wenn coerece, dann wird ungültiges Parsing als NaN gesetzt
-    df["age"] = pd.to_numeric(df["age"], errors='coerce', downcast='float')
+    df["age"] = df["age"].astype(str)
+    df["age"] = df["age"].str.rstrip('.')
+    df['age'] = pd.to_numeric(df['age'], errors='ignore')
+    df['age'] = df['age'].astype("Int64")
 
     # Annual Premium
     df['annual_premium'] = df['annual_premium'].astype(str)
