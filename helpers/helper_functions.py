@@ -15,6 +15,18 @@ from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 import seaborn as sns
 import missingno as msno
 
+from sklearn.impute import SimpleImputer
+from sklearn.experimental import enable_iterative_imputer 
+from sklearn.impute import IterativeImputer
+from sklearn.linear_model import BayesianRidge
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.impute import KNNImputer
+
+from sklearn.model_selection import train_test_split
+
 
 def read_and_set_df(filepath: str) -> pd.DataFrame:
     # Datensatz einlesen
