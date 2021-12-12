@@ -1,6 +1,12 @@
+# config files
 .vscode
 
+# venv 
+venv
+
+# python specific files
 __pycache__
 
+# jupyter output files
 *.html
 *.pdf
