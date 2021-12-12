@@ -68,15 +68,15 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     # Variable Age
     df["age"] = df["age"].astype(str)
     df["age"] = df["age"].str.rstrip('.')
-    df['age'] = pd.to_numeric(df['age'], errors='ignore')
-    df['age'] = df['age'].astype("Int64")
+    df['age'] = df["age"].replace('nan', np.nan)
+    df['age'] = pd.to_numeric(df['age'], errors='raise')
+    df["age"] = df["age"].astype('Int64')
 
     # Annual Premium
     df['annual_premium'] = df['annual_premium'].astype(str)
     df['annual_premium'] = df['annual_premium'].str.rstrip('.')
     df["annual_premium"] = pd.to_numeric(df["annual_premium"], errors='coerce')
     df["annual_premium"] = df["annual_premium"].astype('Int64')
-    df['annual_premium'] = df['annual_premium'].astype('float')
 
     # Vintage
     df['vintage'] = df['vintage'].astype(str)
@@ -109,7 +109,7 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
-    df.replace(to_replace=('NaN', np.nan, np.NaN, np.NAN), value=np.NaN)
+    #df.replace(to_replace=('NaN', np.nan, np.NaN, np.NAN), value=np.NaN)
 
 
 def get_plotly_colors() -> FigureWidget:
