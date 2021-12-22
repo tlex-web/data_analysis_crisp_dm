@@ -1,6 +1,7 @@
 # global import of modules prevent circular imports errors
 import pandas as pd
 import numpy as np
+import re
 
 import matplotlib.pyplot as plt
 
@@ -26,15 +27,23 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.impute import KNNImputer
+from sklearn.svm import SVR
 from sklearn.linear_model import LogisticRegression
 
+from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error as mse
 
 
-def read_and_set_df(filepath: str) -> pd.DataFrame:
+def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
+
+    # with open(filepath) as file:
+    # file.readlines()
+
     # Datensatz einlesen
-    df = pd.read_csv(filepath, sep="$", decimal=".")
+    df = pd.read_csv(filepath, sep='$',  # r'([$-,])+/g'
+                     decimal=".", engine='python', na_values=[np.nan, pd.NA, 'None'], keep_default_na=True)
 
     # Spaltennamen alle kleingeschrieben
     df.columns = df.columns.str.lower()
@@ -59,7 +68,8 @@ def read_and_set_df(filepath: str) -> pd.DataFrame:
         inplace=True)
 
     # Letzte Spalte besteht nur aus nan und kann somit gelöscht werden
-    del df['nan']
+    if not train:
+        del df['nan']
 
     return df
 
