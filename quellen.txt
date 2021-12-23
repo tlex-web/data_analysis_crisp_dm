@@ -4,3 +4,6 @@ https://pandas.pydata.org/pandas-docs/stable/user_guide/missing_data.html
 https://www.statology.org/k-fold-cross-validation-in-python/
 https://scikit-learn.org/stable/modules/cross_validation.html
 https://regexr.com/
+https://www.kaggle.com/nkitgupta/who-will-leave-a-job/notebook
+https://medium.com/swlh/impute-missing-values-the-right-way-c63735fccccd
+https://www.kaggle.com/athi94/investigating-imputation-methods
