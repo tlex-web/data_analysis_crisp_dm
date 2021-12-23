@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from plotly.missing_ipywidgets import FigureWidget
 from plotly.subplots import make_subplots
 import plotly.express as px
+import plotly.figure_factory as ff
 import plotly.offline as py
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 
