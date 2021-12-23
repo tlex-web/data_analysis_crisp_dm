@@ -23,6 +23,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.impute import IterativeImputer
 from sklearn.linear_model import BayesianRidge
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import ExtraTreesRegressor
@@ -102,7 +103,7 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     df['region_code'] = df['region_code'].astype(str)
     df['region_code'] = df['region_code'].str.rstrip('#')
     df["region_code"] = pd.to_numeric(df["region_code"], errors='coerce')
-    df['region_code'] = df['region_code'].astype('float')
+    df['region_code'] = df['region_code'].astype('category')
 
     # Policy Sales Channel
     df['policy_sales_channel'] = df['policy_sales_channel'].astype(str)
