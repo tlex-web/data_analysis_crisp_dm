@@ -11,3 +11,4 @@ https://www.kaggle.com/shahules/tackling-class-imbalance#Under-sampling:-Tomek-l
 https://www.kaggle.com/nkitgupta/who-will-leave-a-job#-k-Nearest-Neighbour-Imputation--
 https://www.kaggle.com/parulpandey/a-guide-to-handling-missing-values-in-python#Treating-Missing-values
 https://www.kaggle.com/shahules/tackling-class-imbalance#Under-sampling:-Tomek-links
+https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html
