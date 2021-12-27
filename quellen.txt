@@ -7,3 +7,7 @@ https://regexr.com/
 https://www.kaggle.com/nkitgupta/who-will-leave-a-job/notebook
 https://medium.com/swlh/impute-missing-values-the-right-way-c63735fccccd
 https://www.kaggle.com/athi94/investigating-imputation-methods
+https://www.kaggle.com/shahules/tackling-class-imbalance#Under-sampling:-Tomek-links
+https://www.kaggle.com/nkitgupta/who-will-leave-a-job#-k-Nearest-Neighbour-Imputation--
+https://www.kaggle.com/parulpandey/a-guide-to-handling-missing-values-in-python#Treating-Missing-values
+https://www.kaggle.com/shahules/tackling-class-imbalance#Under-sampling:-Tomek-links
