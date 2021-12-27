@@ -1,7 +1,6 @@
 # global import of modules prevent circular imports errors
 import pandas as pd
 import numpy as np
-import re
 
 import matplotlib.pyplot as plt
 
@@ -32,10 +31,13 @@ from sklearn.impute import KNNImputer
 from sklearn.svm import SVR
 from sklearn.linear_model import LogisticRegression
 
+from sklearn.utils import resample
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error as mse
+
+from imblearn.over_sampling import SMOTE
 
 
 def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
@@ -45,11 +47,10 @@ def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
 
     # Datensatz einlesen
     df = pd.read_csv(filepath, sep='$',  # r'([$-,])+/g'
-                     decimal=".", engine='python', na_values=[np.nan, pd.NA, 'None'], keep_default_na=True)
+                     decimal=".", engine='python')  # , na_values=[np.nan, pd.NA], keep_default_na=True)
 
     # Spaltennamen alle kleingeschrieben
     df.columns = df.columns.str.lower()
-    df.columns
 
     # Die Spaltennamen waren verschoben - In diesem Schritt werden sie richtig zugeordnet
     df.rename(columns={
@@ -77,6 +78,7 @@ def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
 
 
 def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
+
     # Numerische Variablen
     # Nullable Interger
 
@@ -90,26 +92,27 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     # Annual Premium
     df['annual_premium'] = df['annual_premium'].astype(str)
     df['annual_premium'] = df['annual_premium'].str.rstrip('.')
-    df["annual_premium"] = pd.to_numeric(df["annual_premium"], errors='coerce')
+    df["annual_premium"] = pd.to_numeric(df["annual_premium"], errors='raise')
     df["annual_premium"] = df["annual_premium"].astype('Int64')
 
     # Vintage
     df['vintage'] = df['vintage'].astype(str)
     df['vintage'] = df['vintage'].str.rstrip('##')
-    df["vintage"] = pd.to_numeric(df["vintage"], errors='coerce')
+    df['vintage'] = df["vintage"].replace('nan', np.nan)
+    df["vintage"] = pd.to_numeric(df["vintage"], errors='raise')
     df["vintage"] = df["vintage"].astype('Int64')
 
     # Region Code
     df['region_code'] = df['region_code'].astype(str)
     df['region_code'] = df['region_code'].str.rstrip('#')
-    df["region_code"] = pd.to_numeric(df["region_code"], errors='coerce')
+    df["region_code"] = pd.to_numeric(df["region_code"], errors='raise')
     df['region_code'] = df['region_code'].astype('category')
 
     # Policy Sales Channel
     df['policy_sales_channel'] = df['policy_sales_channel'].astype(str)
     df['policy_sales_channel'] = df['policy_sales_channel'].str.rstrip('##')
     df["policy_sales_channel"] = pd.to_numeric(
-        df["policy_sales_channel"], errors='coerce')
+        df["policy_sales_channel"], errors='raise')
     df["policy_sales_channel"] = df["policy_sales_channel"].astype('Int64')
 
     # Kategorische Variablen
@@ -124,8 +127,33 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
-    #df.replace(to_replace=('NaN', np.nan, np.NaN, np.NAN), value=np.NaN)
+    #df = df.replace(to_replace=['NaN', '<NA>', 'NAN', 'nan', pd.NA, np.nan, np.NaN, np.NAN], value=np.NaN, inplace=True)
 
 
 def get_plotly_colors() -> FigureWidget:
     return px.colors.sequential.swatches()
+
+
+def plot_2d_space(X_train, y_train, X, y, label):
+    colors = ['#1F77B4', '#FF7F0E']
+    markers = ['o', 's']
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+
+    for l, c, m in zip(np.unique(y), colors, markers):
+        ax1.scatter(
+            X_train[y_train == l, 0],
+            X_train[y_train == l, 1],
+            c=c, label=l, marker=m
+        )
+    for l, c, m in zip(np.unique(y), colors, markers):
+        ax2.scatter(
+            X[y == l, 0],
+            X[y == l, 1],
+            c=c, label=l, marker=m
+        )
+
+    ax1.set_title(label)
+    ax2.set_title('original data')
+    plt.legend(loc='upper right')
+    plt.show()
