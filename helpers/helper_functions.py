@@ -15,6 +15,7 @@ from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 import seaborn as sns
 import missingno as msno
 
+
 from sklearn.model_selection import KFold
 from sklearn.impute import SimpleImputer
 from sklearn.experimental import enable_iterative_imputer
@@ -38,6 +39,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error as mse
 
 from imblearn.over_sampling import SMOTE
+
+import featuretools as ft
+
+import tensorflow as tf
 
 
 def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
