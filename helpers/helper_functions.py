@@ -31,6 +31,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.impute import KNNImputer
 from sklearn.svm import SVR
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 from sklearn.utils import resample
 from sklearn.model_selection import cross_val_score
