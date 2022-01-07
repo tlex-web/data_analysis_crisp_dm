@@ -12,3 +12,4 @@ https://www.kaggle.com/nkitgupta/who-will-leave-a-job#-k-Nearest-Neighbour-Imput
 https://www.kaggle.com/parulpandey/a-guide-to-handling-missing-values-in-python#Treating-Missing-values
 https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html
 https://towardsdatascience.com/how-to-deal-with-imbalanced-data-in-python-f9b71aba53eb
+https://plotly.com/python/horizontal-bar-charts/
