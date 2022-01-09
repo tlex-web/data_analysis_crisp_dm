@@ -133,7 +133,10 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
-    #df = df.replace(to_replace=['NaN', '<NA>', 'NAN', 'nan', pd.NA, np.nan, np.NaN, np.NAN], value=np.NaN, inplace=True)
+    df = df.replace(to_replace=['NaN', '<NA>', 'NAN', 'nan',
+                    pd.NA, np.nan, np.NaN, np.NAN], value=np.NaN, inplace=True)
+
+    return df
 
 
 def get_plotly_colors() -> FigureWidget:
