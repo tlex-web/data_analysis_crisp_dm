@@ -1,1 +1,1 @@
-{"criterion": "entropy", "max_depth": 21, "max_features": 0.5, "min_samples_leaf": 1, "min_samples_split": 80, "n_estimators": 500}
+{"bootstrap": true, "criterion": "gini", "max_depth": 45, "max_features": 0.5, "max_leaf_nodes": null, "min_samples_leaf": 3, "min_samples_split": 100, "n_estimators": 2000}

@@ -1,1 +1,1 @@
-{"criterion": "entropy", "max_depth": 21, "max_features": 0.5, "min_samples_leaf": 1, "min_samples_split": 80, "n_estimators": 500}
+{"criterion": "friedman_mse", "learning_rate": 0.2, "loss": "deviance", "max_depth": 23, "max_features": "log2", "min_samples_leaf": 12, "min_samples_split": 0.5, "n_estimators": 750, "subsample": 0.9}
