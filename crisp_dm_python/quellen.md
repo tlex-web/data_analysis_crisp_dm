@@ -15,3 +15,4 @@
 -   https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html
 -   https://towardsdatascience.com/how-to-deal-with-imbalanced-data-in-python-f9b71aba53eb
 -   https://plotly.com/python/horizontal-bar-charts/
+-   https://support.minitab.com/de-de/minitab/20/help-and-how-to/statistics/basic-statistics/supporting-topics/correlation-and-covariance/a-comparison-of-the-pearson-and-spearman-correlation-methods/
