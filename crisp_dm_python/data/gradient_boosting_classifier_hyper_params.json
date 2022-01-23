@@ -1,1 +1,1 @@
-{"criterion": "friedman_mse", "learning_rate": 0.2, "loss": "deviance", "max_depth": 23, "max_features": "log2", "min_samples_leaf": 12, "min_samples_split": 0.5, "n_estimators": 750, "subsample": 0.9}
+{"criterion": "squared_error", "learning_rate": 0.01, "loss": "deviance", "max_features": "log2", "min_samples_leaf": 5, "min_samples_split": 5, "n_estimators": 2500, "subsample": 0.5}
