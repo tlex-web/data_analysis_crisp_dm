@@ -3,6 +3,6 @@ root: notebooks/business_understanding
 chapters:
     - file: notebooks/data_understanding
     - file: notebooks/data_preparation
-#    - file: notebooks/modelling
-#    - file: notebooks/deployment
-     - file: quellen
+    - file: notebooks/modelling
+    - file: notebooks/deployment
+    - file: quellen
