@@ -1,0 +1,1 @@
+{"criterion": "friedman_mse", "learning_rate": 0.01, "loss": "exponential", "max_features": "log2", "min_samples_leaf": 2, "min_samples_split": 2, "n_estimators": 2750, "subsample": 0.85}
