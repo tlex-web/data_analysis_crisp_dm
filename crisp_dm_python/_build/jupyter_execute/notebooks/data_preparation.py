@@ -6,9 +6,39 @@
 # In[1]:
 
 
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+import plotly.express as px
+import plotly.figure_factory as ff
+from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
+
+import seaborn as sns
+import missingno as msno
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.impute import KNNImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.utils import resample
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+
+from imblearn.over_sampling import SMOTE
+import statsmodels.formula.api as smf
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
+
 from collections import Counter
 from imblearn.over_sampling import SMOTE
-from sklearn.metrics import accuracy_score, auc
+from sklearn.metrics import auc, roc_auc_score
 from sklearn.model_selection import train_test_split
 import warnings
 
@@ -20,56 +50,6 @@ from imblearn.pipeline import Pipeline as imbpipeline
 
 
 # In[2]:
-
-
-import pandas as pd
-import numpy as np
-
-import matplotlib.pyplot as plt
-
-import plotly.graph_objects as go
-from plotly.missing_ipywidgets import FigureWidget
-from plotly.subplots import make_subplots
-import plotly.express as px
-import plotly.figure_factory as ff
-import plotly.offline as py
-from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
-
-import seaborn as sns
-import missingno as msno
-
-
-from sklearn.model_selection import KFold
-from sklearn.impute import SimpleImputer
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import IterativeImputer
-from sklearn.linear_model import BayesianRidge
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.impute import KNNImputer
-from sklearn.svm import SVR
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-
-from sklearn.utils import resample
-from sklearn.model_selection import cross_val_score
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error as mse
-
-from imblearn.over_sampling import SMOTE
-
-import featuretools as ft
-
-import tensorflow as tf
-
-
-# In[3]:
 
 
 def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
@@ -165,7 +145,7 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# In[4]:
+# In[3]:
 
 
 df = read_and_set_df('../data/train.csv', train=False)
@@ -175,7 +155,7 @@ set_datatypes(df)
 df.head()
 
 
-# In[5]:
+# In[4]:
 
 
 df.describe(include='all').transpose()
@@ -190,15 +170,14 @@ df.describe(include='all').transpose()
 
 # ### Verteilung der Missing Values 
 
-# In[6]:
+# In[5]:
 
 
 # Verteilung der Missing Values innerhalb der Variablen 
 msno.matrix(df.sample(1000), sparkline=False, figsize=(10,5), fontsize=12, color=(0.27, 0.52, 1.0))
 
 
-# In[7]:
-
+# In[6]:
 
 
 plt.figure(figsize=(10,6))
@@ -207,58 +186,33 @@ sns.heatmap(df.isna().transpose(),
             cbar_kws={'label': 'Missing Data'})
 
 
-# In[8]:
+# In[7]:
 
 
-# Visualize the correlation between the number of
-# missing values in different columns as a heatmap
+# Lineare Abhängigkeit der fehlenden Werten in den jeweiligen Spalten 
+# -> Zeigt an, ob fehlende Werte an denselben Stellen in Datensatz auftreten
 msno.heatmap(df)
 
 
-# 
-# 
 # Um dieses Diagramm zu interpretieren, lesen Sie es aus einer Top-Down-Perspektive. Clusterblätter, die in einem Abstand von Null miteinander verbunden sind, sagen das Vorhandensein des jeweils anderen vollständig voraus - eine Variable könnte immer leer sein, wenn eine andere gefüllt ist, oder sie könnten immer beide gefüllt oder beide leer sein, und so weiter. In diesem speziellen Beispiel klebt das Dendrogramm die Variablen zusammen, die erforderlich und daher in jedem Datensatz vorhanden sind.
-# 
-# Clusterblätter, die sich in der Nähe von Null aufspalten, aber nicht bei Null, sagen sich gegenseitig sehr gut, aber immer noch unvollkommen voraus. Wenn Ihre eigene Interpretation des Datensatzes darin besteht, dass diese Spalten tatsächlich in Null übereinstimmen oder übereinstimmen sollten (z. B. als BETEILIGUNGSFAKTOR FAHRZEUG 2 und FAHRZEUG-TYPCODE 2), dann sagt Ihnen die Höhe des Clusterblatts in absoluten Zahlen, wie oft die Datensätze "nicht übereinstimmen" oder falsch abgelegt sind - d. h. wie viele Werte Sie ausfüllen oder streichen müssten, wenn Sie dazu geneigt sind.
 # 
 # Beschreibung: 
 # Das Dendrogramm verwendet einen hierarchischen Clustering-Algorithmus, um die Variablen anhand ihrer Nullkorrelation gegeneinander abzugrenzen. 
 # 
-# 
 # Erklärung: 
-# Clutster, die sich in bei Null aufspalten, sagen sich untereinander vollkommen voraus (Korrelation von 1). Auf Grundlage 
+# Clutster, die sich in bei Null aufspalten, sagen sich untereinander vollkommen voraus (Korrelation von 1). 
 # 
 # Auf jeder Stufe des Baums werden die Variablen auf der Grundlage der Kombination aufgeteilt, die den Abstand der verbleibenden Cluster minimiert.  
 # 
 # Je monotoner die Variablen sind, desto näher liegt ihr Gesamtabstand bei Null und desto näher liegt ihr durchschnittlicher Abstand (die y-Achse) bei Null.   
 
-# In[9]:
+# In[8]:
 
 
 msno.dendrogram(df, orientation='top')
 
 
-# In[10]:
-
-
-# Verteilung der Missing Values innerhalb der Variablen 
-#msno.matrix(df, freq='Tim', sparkline=False)
-#df.iloc[:, 0]
-#msno.matrix(df.set_index(pd.period_range('1/1/2011', '2/1/2015', freq='M')) , freq='BQ')
-
-
-# In[11]:
-
-
-# Drop all rows with NaNs in A OR B
-
-#x = df.dropna(subset=['previously_insured', 'driving_license', 'vehicle_age', 'vehicle_damage', 'vintage'])
-
-
-df.info()
-
-
-# In[12]:
+# In[9]:
 
 
 df_na_bool = pd.DataFrame(pd.isna(df))
@@ -269,14 +223,6 @@ df.drop(df_na_bool[(df_na_bool['previously_insured'] == True) &
            (df_na_bool['vehicle_damage'] == True) &
            (df_na_bool['vintage'] == True)].index, inplace=True)
 
-df.info()
-
-
-# In[13]:
-
-
-pd.isna(df).sum()
-
 
 # Listenweiser Fallausschluss - Wir haben mittels dem listenweisen Fallausschluss 51 Zeilen aus dem Datensatz entfernt. Dabei haben wir ebenfalls die Anzahl der missing values bei den Variablen von age und gender um 51 Werte reduziert.
 
@@ -284,13 +230,18 @@ pd.isna(df).sum()
 
 # ### Age
 # 
-# - Untergrenze: 18
-# - Obergrenze: 100
+# - Untergrenze: 18 
+# 
+# Da man in Indien ab 18 Jahren ein KFZ  führen darf, kann man ab diesem Alter auch auf seinen Namen eine KFZ-Verischerung abschließen
+# - Obergrenze: 75
+# 
+# Da der obere Whisker bei `age` und `response=Yes` bei 75 liegt, übernehmen wir diesen Wert als Übergrenze. 
+# Aufgrund der durchschnittlichen Lebenserwartung in Indien von 69.3, wird es wohl keine Personen über 80 Jahren geben, welche noch ein KFZ führen.
 
-# In[14]:
+# In[10]:
 
 
-index_max_age = df[df["age"] >= 100].index
+index_max_age = df[df["age"] >= 75].index
 df.drop(index_max_age, inplace=True)
 
 index_min_age = df[df["age"] < 18].index
@@ -302,31 +253,27 @@ df["age"].describe()
 # ### Annual Premium
 # 
 # - Untergrenze: 0
-# - Obergrenze: 150.000
+# 
+# Negative Werte als Prämie erscheinen uns nicht schlüssig, da man in Indien sicherlich keine Erstattungen oder Rückzahlungen von Beiträgen bei der Krankenkasse zu erwarten hat, da die Beiträge dort nicht gesetzlich geregelt, sondern nach eigenem Ermessen gezahlt werden.
 
-# In[15]:
+# In[11]:
 
 
 index_min_premium = df[df["annual_premium"] <= 0].index
 df.drop(index_min_premium, inplace=True)
 
-index_max_premium = df[df["annual_premium"] >= 150000].index
-df.drop(index_max_premium, inplace=True)
-
 df["annual_premium"].describe()
-
-df['vehicle_age'].unique()
 
 
 # ## Train Test Splitting
 
-# In[16]:
+# In[12]:
 
 
 X = df.drop(['response', 'id'], axis=1)
 y = df[['response']]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.005, test_size = 0.009, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.7, test_size = 0.3, random_state=42)
 
 X_train_df = pd.DataFrame(X_train)
 y_train_df = pd.DataFrame(y_train)
@@ -338,36 +285,13 @@ len(X_train_df), len(y_train_df), len(X_test_df), len(y_test_df)
 
 # #### Categorial Mapping
 
-# In[17]:
+# In[13]:
 
 
 def map_categorials_x(df):
-
-    # driving_license_map = {
-    #     'No': 0,
-    #     'Yes': 1
-    # }
-
-    # previously_insured_map = {
-    #     'No': 0,
-    #     'Yes': 1
-    # }
-
-    # vehicle_age_map = {
-    #     '< 1 Year': 0,
-    #     '1-2 Year': 1,
-    #     '> 2 Years': 2
-    # }
-
-    # vehicle_damage_map = {
-    #     'No': 0,
-    #     'Yes': 1
-    # }
-
-    # df.loc[:,'driving_license'] = df['driving_license'].map(driving_license_map)
-    # df.loc[:,'previously_insured'] = df['previously_insured'].map(previously_insured_map)
-    # df.loc[:,'vehicle_age'] = df['vehicle_age'].map(vehicle_age_map).astype('Int64')
-    # df.loc[:,'vehicle_damage'] = df['vehicle_damage'].map(vehicle_damage_map)
+    """
+    Mapping der kategorialen Variablen zu numerischen Variablen
+    """
 
     LE = LabelEncoder()
     df['driving_license'] = LE.fit_transform(df.loc[:, 'driving_license'])
@@ -383,104 +307,131 @@ X_train_label_encoded = map_categorials_x(X_train_df.copy())
 X_test_label_encoded = map_categorials_x(X_test_df.copy())
 
 def map_categorials_y(df):
+    """
+    Mapping der Zielvariable
+    """
+
     LE = LabelEncoder()
 
     df['response'] = LE.fit_transform(df.loc[:,'response'])
 
     return df
 
-y_train_label_encoded = map_categorials_y(y_train_df)
-y_test_label_encoded = map_categorials_y(y_test_df)
+y_train_label_encoded = map_categorials_y(y_train_df.copy())
+y_test_label_encoded = map_categorials_y(y_test_df.copy())
 
+
+# ONE HOT ENCODING
+
+# ONE-HOT-ENCODING transformiert kategoriale Variablen zu binären Variablen mittels des 'one-hot' Verfahrens.
+# Dieser Schritt der Kodierung kategorialer Variablen ist nötig, um diese später in linearen Modellen und Vektor Maschinen zu verwenden.
+
+# In[14]:
+
+
+X_train_df_one_hot_encoded_data_without_gender = pd.get_dummies(X_train_df, columns = ['driving_license', 'vehicle_age', 'vehicle_damage', 'previously_insured'])
+
+X_test_df_one_hot_encoded_data_without_gender = pd.get_dummies(X_test_df, columns = ['driving_license', 'vehicle_age', 'vehicle_damage', 'previously_insured'])
+
+
+# Wir wenden die ONE-HOT Kodierung nicht auf die Variable `gender` an, die wir dann deren fehlende Werte nicht mehr mit den `sklearn.Imputer` imputieren können. Stattdessen kodieren wir alle anderen Variablen und wenden die ONE-HOT Kodierung nach der erfolgreichen Imputation von `gender` wieder diese an. 
 
 # ## Imputationverfahren für die Variable Age
 
 # ### Imputation auf der Train Batch
 
+# usprüngliche Verteilung vom Alter bei der Train und Test Batch
+
+# In[15]:
+
+
+X_train_original_age = pd.DataFrame(X_train_df['age'].dropna(), columns=['age'])
+X_test_original_age = pd.DataFrame(X_test_df['age'].dropna(), columns=['age'])
+
+
 # #### Mean Imputation 
 
-# In[18]:
+# In[16]:
 
-
-# Create dataset
-imputed_train = pd.DataFrame()
-imputed_test = pd.DataFrame()
-X_test_mean = X_test['age']
-X_train_mean = X_train['age']
 
 # Fill missing values of Age with the average of Age (mean)
-imputed_train['age'] = X_train_mean.fillna(round(X_train_mean.mean(),0)).astype("Int64")
-imputed_test['age'] = X_test_mean.fillna(round(X_test_mean.mean(),0)).astype("Int64")
-
-train_imputed_mean_age = np.array(imputed_train['age'], dtype=int)
-test_imputed_mean_age = np.array(imputed_test['age'], dtype=int)
-actual_df_age = np.array(df['age'].dropna(), dtype=int)
+X_test_mean = pd.DataFrame(X_test_df['age'].fillna(round(X_test_df['age'].mean(),0)).astype("Int64"), columns=['age'])
+X_train_mean = pd.DataFrame(X_train_df['age'].fillna(round(X_train_df['age'].mean(),0)).astype("Int64"), columns=['age'])
 
 
 # #### Median Imputation 
 
-# In[19]:
+# In[17]:
 
-
-# Create dataset
-imputed_train_median = pd.DataFrame()
-imputed_test_median = pd.DataFrame()
-X_test_median = X_test['age']
-X_train_median = X_train['age']
 
 # Fill missing values of Age with the average of Age (median)
-imputed_train_median['age'] = X_train_median.fillna(round(X_train_median.median(),0)).astype("Int64")
-imputed_test_median['age'] = X_test_median.fillna(round(X_test_median.mean(),0)).astype("Int64")
-
-train_imputed_median_age = np.array(imputed_train_median['age'], dtype=int)
-test_imputed_median_age = np.array(imputed_test_median['age'], dtype=int)
-actual_df_age = np.array(df['age'].dropna(), dtype=int)
+X_test_median = pd.DataFrame(X_test_df['age'].fillna(round(X_test_df['age'].mean(),0)).astype("Int64"), columns=['age'])
+X_train_median = pd.DataFrame(X_train_df['age'].fillna(round(X_train_df['age'].median(),0)).astype("Int64"), columns=['age'])
 
 
 # #### K-Nearest Neighbour
 
-# In[20]:
+# In[18]:
 
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import RepeatedStratifiedKFold
-from sklearn.pipeline import Pipeline
-
+# Um die beste Anzahl an neighbors zu ermittlen, erstellen wir eine Pipeline zur Extraktion der höchsten accuracy 
+# bei einem Random Forest Classifier mittles cross-validation
 results = list()
-strategies = [str(i) for i in [1,3,5,7,9,15,18,21]]
-for s in strategies:
-	# create the modeling pipeline
-	pipeline = Pipeline(steps=[('i', KNNImputer(n_neighbors=int(s))), ('m', RandomForestClassifier())])
-	# evaluate the model
-	cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+n_neighbors = [str(i) for i in [3,5,7,9,15,21]]
+for s in n_neighbors:
+	# modeling pipeline
+	pipeline = Pipeline(steps=[('i', KNNImputer(n_neighbors=int(s))), ('m', RandomForestClassifier(random_state=42))])
+	# Cross-Validation 
+	cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 	scores = cross_val_score(pipeline, X_train_label_encoded, y_train_label_encoded, scoring='accuracy', cv=cv, n_jobs=-1)
-	# store results
+	# Ergebnisse sichern
 	results.append(scores)
 	print('>%s %.3f (%.3f)' % (s, np.mean(scores), np.std(scores)))
-# plot model performance for comparison
-plt.boxplot(results, labels=strategies, showmeans=True)
+# plot model performance
+plt.boxplot(results, labels=n_neighbors, showmeans=True)
 plt.show()
 
 
-# In[21]:
+# In[19]:
 
+
+# Zur dynamischen Übergabe der besten Anzahl an n_neighbors filtern wir diesen aus dem Array n_neighbors, 
+# über den Index der Spalte mit dem höchsten Mittelwert
+
+l = []
+for row in results:
+    means_per_row = np.mean(row)
+    l.append(means_per_row)
+
+best_n_neighbors = int(n_neighbors[l.index(np.max(l))])
+
+
+# In[81]:
+
+
+knn = KNNImputer(n_neighbors=best_n_neighbors, weights='uniform')
 
 # Modellierung auf Trainingsdaten
-X_train_df_knn_X = X_train_label_encoded.copy()
-knn = KNNImputer(n_neighbors=7, weights='uniform')
+# Da unser Modell nur mit numerischen Werten umgehen kann, ersetzen wir die kategorialen Werte durch numerische
+X_train_df_knn_X = X_train_df_one_hot_encoded_data_without_gender.copy().replace({'Female': 0, 'Male': 1}) 
 
-X_knn = knn.fit_transform(X_train_df_knn_X)
-X_train_df_knn = pd.DataFrame(X_knn, columns=X_train_df_knn_X.columns)
+X_knn_train = knn.fit_transform(X_train_df_knn_X)
+X_train_df_knn = pd.DataFrame(X_knn_train, columns=X_train_df_knn_X.columns)
+X_train_df_knn['age'] = X_train_df_knn['age'].round()
 
 # Modellierung auf Testdaten
-X_test_df_knn_X = X_test_label_encoded.copy()
-knn = KNNImputer(n_neighbors=7, weights='uniform')
+X_test_df_knn_X = X_test_df_one_hot_encoded_data_without_gender.copy().replace({'Female': 0, 'Male': 1})
 
-X_knn = np.round(knn.fit_transform(X_test_df_knn_X))
-X_test_df_knn = pd.DataFrame(X_knn, columns=X_test_df_knn_X.columns)
+X_knn_test = knn.fit_transform(X_test_df_knn_X)
+X_test_df_knn = pd.DataFrame(X_knn_test, columns=X_test_df_knn_X.columns)
+X_test_df_knn['age'] = X_test_df_knn['age'].round()
+
+# Nach der Imputation wandeln wir diese wieder zu kategorialen Werten zurück. (Dieser Schritt wäre nicht nötig, allerdings wollen wir bei der ONE-HOT Kodierung wieder die Ausprägung im Variablennamen stehen haben, z.B gender_Female statt gender_0)
+X_train_df_knn['gender'] = X_train_df_knn['gender'].round().replace({0: 'Female', 1: 'Male'})
+X_test_df_knn['gender'] = X_test_df_knn['gender'].round().replace({0: 'Female', 1: 'Male'})
 
 
-# In[22]:
+# In[21]:
 
 
 # Create the correlation matrix
@@ -511,179 +462,218 @@ sns.heatmap(
 )
 
 
-# In[23]:
-
-
-X_train_label_encoded['age'].unique()
-
-
 # #### Miss Forest
 
-# In[24]:
+# In[22]:
 
-
-from sklearn.experimental import enable_iterative_imputer
 
 # Modellierung auf den Trainingsdaten
-X_train_df_mice_X = X_train_label_encoded.copy()
+# Diesselbe Herangehensweise bei der Impuation von gender wenden wir auch hier an
+X_train_df_mice_X = X_train_df_one_hot_encoded_data_without_gender.copy().replace({'Female': 0, 'Male': 1})
 
 mice_imputer = IterativeImputer()
 X_mice = mice_imputer.fit_transform(X_train_df_mice_X)
 X_train_df_mice = pd.DataFrame(X_mice, columns=X_train_df_mice_X.columns)
-X_train_df_mice['gender'] = X_train_df_mice['gender'].round()
+X_train_df_mice['age'] = X_train_df_mice['age'].round().astype('Int64')
+X_train_df_mice['gender'] = X_train_df_mice['gender'].round().replace({0: 'Female', 1: 'Male'})
 
 # Modellierung auf den Testdaten
-X_test_df_mice_X = X_test_label_encoded.copy()
+X_test_df_mice_X = X_test_df_one_hot_encoded_data_without_gender.copy().replace({'Female': 0, 'Male': 1})
 
 X_mice = mice_imputer.fit_transform(X_test_df_mice_X)
 X_test_df_mice = pd.DataFrame(X_mice, columns=X_test_df_mice_X.columns)
-X_test_df_mice['gender'] = X_test_df_mice['gender'].round()
+X_test_df_mice['age'] = X_test_df_mice['age'].round().astype('Int64')
+X_test_df_mice['gender'] = X_test_df_mice['gender'].round().replace({0: 'Female', 1: 'Male'})
 
 
 # #### Lineares Regressionsmodell
 
-# ONE HOT encoding:
-# 
-# ONE-HOT-ENCODiNG transformiert kategoriale Variablen zu binären Variablen mittels des 'one-hot' Verfahrens.
-# Dieser Schritt der Kodierung kategorialer Variablen ist nötig, um diese später in linearen Modellen und Vektor Maschinen zu verwenden.
+# In[23]:
+
+
+# Train-Batch Datensatz filtern, nach allen Zeilen mit Missing Values bei Age
+X_train_age_na = X_train_df_one_hot_encoded_data_without_gender['age'].isna()
+X_train_age_missing = X_train_age_na[X_train_age_na == True]
+X_train_age_missing = pd.merge(X_train_age_missing, X_train_df_one_hot_encoded_data_without_gender, left_index=True, right_index=True)
+del X_train_age_missing['age_y']
+del X_train_age_missing['age_x']
+
+# Test-Batch Datensatz filtern, nach allen Zeilen mit Missing Values bei Age
+X_test_age_na = X_test_df_one_hot_encoded_data_without_gender['age'].isna()
+X_test_age_missing = X_test_age_na[X_test_age_na == True]
+X_test_age_missing = pd.merge(X_test_age_missing, X_test_df_one_hot_encoded_data_without_gender, left_index=True, right_index=True)
+del X_test_age_missing['age_y']
+del X_test_age_missing['age_x']
+
+# Länge der beiden Data Frames ausgeben lassen
+print(len(X_train_age_missing), len(X_test_age_missing))
+
+
+# In[24]:
+
+
+# Casting für die Training-Batch
+X_train_df_one_hot_encoded_data_no_na = X_train_df_one_hot_encoded_data_without_gender.copy().dropna()
+X_train_df_one_hot_encoded_data_no_na['annual_premium']= X_train_df_one_hot_encoded_data_no_na['annual_premium'].astype(int)
+X_train_df_one_hot_encoded_data_no_na['vintage'] = X_train_df_one_hot_encoded_data_no_na['vintage'].astype(int)
+X_train_df_one_hot_encoded_data_no_na['policy_sales_channel'] = X_train_df_one_hot_encoded_data_no_na['policy_sales_channel'].astype(int)
+X_train_df_one_hot_encoded_data_no_na['age'] = X_train_df_one_hot_encoded_data_no_na['age'].astype(int)
+
+# Casting für die Testing-Batch
+X_test_df_one_hot_encoded_data_no_na = X_test_df_one_hot_encoded_data_without_gender.copy().dropna()
+X_test_df_one_hot_encoded_data_no_na['annual_premium']= X_test_df_one_hot_encoded_data_no_na['annual_premium'].astype(int)
+X_test_df_one_hot_encoded_data_no_na['vintage'] = X_test_df_one_hot_encoded_data_no_na['vintage'].astype(int)
+X_test_df_one_hot_encoded_data_no_na['policy_sales_channel'] = X_test_df_one_hot_encoded_data_no_na['policy_sales_channel'].astype(int)
+X_test_df_one_hot_encoded_data_no_na['age'] = X_test_df_one_hot_encoded_data_no_na['age'].astype(int)
+
+# Modell aufbauen
+def smf_ols_spec(df): 
+    mod = smf.ols(formula = 'age ~ annual_premium + policy_sales_channel + vehicle_damage_No + vehicle_damage_Yes + previously_insured_No + previously_insured_Yes', data=X_train_df_one_hot_encoded_data_no_na)
+    return mod
+
+ols_train = smf_ols_spec(X_train_df_one_hot_encoded_data_no_na)
+ols_test = smf_ols_spec(X_test_df_one_hot_encoded_data_no_na)
+
+# Modell auf den Trainingsdaten fitten
+res_train = ols_train.fit()
+res_test = ols_test.fit()
+
 
 # In[25]:
 
 
-X_train_df_one_hot_encoded_data = pd.get_dummies(X_train_df, columns = ['driving_license', 'gender', 'vehicle_age', 'vehicle_damage', 'previously_insured'])#.dropna()
-X_train_df_one_hot_encoded_data.head()
+# Resultate für die Training-Batch ausgeben lassen 
+print(res_train.summary())
 
 
 # In[26]:
 
 
-corr = X_train_df_one_hot_encoded_data.corr()
-corr.style.background_gradient(cmap='coolwarm').set_precision(2)
+# Resultate für die Training-Batch ausgeben lassen 
+print(res_test.summary())
 
 
 # In[27]:
 
 
-# Modellierung auf den Trainingsdaten
-df_linear_model_w_na = X_train_df_one_hot_encoded_data.copy().dropna(subset=['age', 'region_code'])
-df_linear_model = X_train_df_one_hot_encoded_data.copy()[['age', 'region_code']]
+# Hier müssen wir die für die Regression verwendeten Variablen nochmal casten, um diese auch im Modell verwenden zu können
+X_train_age_missing['annual_premium']= X_train_age_missing['annual_premium'].astype(int)
+X_train_age_missing['vintage'] = X_train_age_missing['vintage'].astype(int)
+X_train_age_missing['policy_sales_channel'] = X_train_age_missing['policy_sales_channel'].astype(int)
 
-X_reg = df_linear_model_w_na[['region_code']]
-y_reg = df_linear_model_w_na[['age']]
+# Predicten 
+predictions_age_train_data_ols = pd.DataFrame(round(res_train.predict(X_train_age_missing),2))
+predictions_age_train_data_ols.columns = ['age']
+predictions_age_train_data_ols
 
-age_missing = df_linear_model['age'].isnull()
-df_age_missing = pd.DataFrame(df_linear_model['region_code'][age_missing])
-
-X_train_regression, X_test_regression, y_train_regression, y_test_regression = train_test_split(X_reg, y_reg, train_size=0.8, test_size = 0.2, random_state=42)
-
-lm = LinearRegression()
-lm.fit(X_train_regression, y_train_regression)
-
-#yp = pd.DataFrame(lm.predict(df_age_missing).round(), columns=['pred'])
-
-#df_linear_model = df_linear_model['age'].apply(lambda x: x.fillna())
-#df_linear_model.isna().sum(), yp['pred']
-
-
-# #### Visualisierung der Imputationsverfahren
 
 # In[28]:
 
 
-hist_data_train = [X_train_df_mice['age'], X_train_df_knn['age'], train_imputed_mean_age, train_imputed_median_age, actual_df_age]
+# Hier müssen wir die für die Regression verwendeten Variablen nochmal casten, um diese auch im Modell verwenden zu können
+X_test_age_missing['annual_premium']= X_test_age_missing['annual_premium'].astype(int)
+X_test_age_missing['vintage'] = X_test_age_missing['vintage'].astype(int)
+X_test_age_missing['policy_sales_channel'] = X_test_age_missing['policy_sales_channel'].astype(int)
 
-group_labels = ['train_imputed_mice_age','train_imputed_knn_age','train_imputed_mean_age', 'train_imputed_median_age', 'actual_df_age']
-colors = ['#333F44', '#37AA9C', '#f3722c', '#6a994e', '#0077b6']
+# Predicten 
+predictions_age_test_data_ols = pd.DataFrame(round(res_test.predict(X_test_age_missing),2))
+predictions_age_test_data_ols.columns = ['age']
+predictions_age_test_data_ols
 
-# Create distplot with curve_type set to 'normal'
-fig = ff.create_distplot(hist_data_train, group_labels, show_hist=False, colors=colors, rug_text=None, show_rug=False)
-
-# Add title
-fig.update_layout(title_text='Verteilung der Variable nach Imputationsverfahren in der Train Batch')
-fig.show()
-
-
-# ## Imputationverfahren für die Variable Gender
 
 # In[29]:
 
 
+# Training-Batch
+X_train_df_regression = pd.merge(X_train_age_missing, predictions_age_train_data_ols, right_index=True, left_index=True)
+X_train_df_regression = X_train_df_regression.combine_first(X_train_df_one_hot_encoded_data_without_gender)
 
-fig = make_subplots(rows=1)
+# Training-Batch
+X_test_df_regression = pd.merge(X_test_age_missing, predictions_age_test_data_ols, right_index=True, left_index=True)
+X_test_df_regression = X_test_df_regression.combine_first(X_test_df_one_hot_encoded_data_without_gender)
 
-fig.add_trace(go.Bar(name="Ursprüngliche Verteilung",x = X_train_df['gender'].replace({0: 'Female', 1: 'Male'}), y = X_train_df['gender'].value_counts(normalize=True),
-                                    text = X_train_df['gender'].value_counts(normalize=True).apply(lambda x: '{0:1.3f}%'.format(x))
-                        ))
-
-fig.add_trace(go.Bar(name="Verteilung nach MICE Imputation", x = X_train_df_mice['gender'].replace({0: 'Female', 1: 'Male'}), y = X_train_df_mice['gender'].value_counts(normalize=True),
-                                    text = X_train_df_mice['gender'].value_counts(normalize=True).apply(lambda x: '{0:1.3f}%'.format(x))
-                        ))
-
-fig.add_trace(go.Bar(name="Verteilung nach MICE Imputation", x = X_train_df_knn['gender'].replace({0: 'Female', 1: 'Male'}), y = X_train_df_knn['gender'].value_counts(normalize=True),
-                                    text = X_train_df_knn['gender'].value_counts(normalize=True).apply(lambda x: '{0:1.3f}%'.format(x))
-                        ))
+X_train_df_regression
 
 
-fig.update_layout(title_text="Relative Verteilung der Variable Gender")
-
-fig.show()
-
-
-# ### Imputation auf der Test Batch 
+# #### Visualisierung der Imputationsverfahren in der Train Batch
 
 # In[30]:
 
 
-hist_data_test = [X_test_df_mice['age'], X_test_df_knn['age'], test_imputed_mean_age, test_imputed_median_age, actual_df_age]
+# Datensätze erstellen
+hist_data_train = [np.array(X_train_df_regression['age'], dtype=np.int64), np.array(X_train_df_mice['age'], dtype=np.int64), np.array(X_train_df_knn['age'], dtype=np.int64), np.array(X_train_mean['age'], dtype=np.int64), np.array(X_train_median['age'], dtype=np.int64), np.array(X_train_original_age['age'], dtype=np.int64)]
 
-group_labels = ['test_imputed_mice_age','test_imputed_knn_age','test_imputed_mean_age', 'test_imputed_median_age', 'actual_df_age']
-colors = ['#333F44', '#37AA9C', '#f3722c', '#6a994e', '#0077b6']
+# Gruppennamen und Farben festlegen
+group_labels = ['train_imputed_regression', 'train_imputed_mice_age','train_imputed_knn_age','train_imputed_mean_age', 'train_imputed_median_age', 'actual_df_age']
+colors = ['red','#333F44', '#37AA9C', '#f3722c', '#6a994e', '#0077b6']
 
-# Create distplot with curve_type set to 'normal'
-fig = ff.create_distplot(hist_data_test, group_labels, show_hist=False, colors=colors, rug_text=None, show_rug=False)
+# Erstellen des Histogrammes 
+fig = ff.create_distplot(hist_data_train, group_labels, show_hist=False, colors=colors, rug_text=None, show_rug=False)
+fig.update_layout(legend=dict(x=0.893,y=1,traceorder="reversed",title_font_family="Times New Roman",font=dict(family="Courier",size=12,color="black"),bgcolor="LightSteelBlue",bordercolor="#fff",borderwidth=2))
 
-# Add title
-fig.update_layout(title_text='Verteilung der Variable nach Imputationsverfahren in der Test Batch')
+# Titel hinzufügen
+fig.update_layout(title_text='Verteilung der Variable age nach der Imputation in der Train Batch')
+
+# Plot anzeigen
 fig.show()
 
+
+# ### Visualisierung der Imputationsverfahren auf der Test Batch 
 
 # In[31]:
 
 
-corr = X_train_df_knn.corr()
+# Datensätze erstellen
+hist_data_test = [np.array(X_train_df_regression['age'], dtype=np.int64), np.array(X_test_df_mice['age'], dtype=np.int64), np.array(X_test_df_knn['age'], dtype=np.int64), np.array(X_test_mean['age'], dtype=np.int64), np.array(X_test_median['age'], dtype=np.int64), np.array(X_test_original_age['age'], dtype=np.int64)]
 
-mask = np.zeros_like(corr, dtype=bool)
-mask[np.triu_indices_from(mask)] = True
+# Gruppennamen und Farben festlegen
+group_labels = ['test_imputed_ols_age','test_imputed_mice_age','test_imputed_knn_age','test_imputed_mean_age', 'test_imputed_median_age', 'actual_df_age']
+colors = ['red', '#333F44', '#37AA9C', '#f3722c', '#6a994e', '#0077b6']
 
-f, ax = plt.subplots(figsize=(11, 9))
+# Erstellen des Histogrammes 
+fig = ff.create_distplot(hist_data_test, group_labels, show_hist=False, colors=colors, rug_text=None, show_rug=False)
+fig.update_layout(legend=dict(x=0.895,y=1,traceorder="reversed",title_font_family="Times New Roman",font=dict(family="Courier",size=12,color="black"),bgcolor="LightSteelBlue",bordercolor="#fff",borderwidth=2))
 
-# Generate a custom diverging colormap
-cmap = sns.color_palette("crest", as_cmap=True)
+# Titel hinzufügen
+fig.update_layout(title_text='Verteilung der Variable age nach der Imputation in der Test Batch')
 
-# Draw the heatmap with the mask and correct aspect ratio
-sns.heatmap(
-    corr,          # The data to plot
-    mask=mask,     # Mask some cells
-    cmap=cmap,     # What colors to plot the heatmap as
-    annot=True,    # Should the values be plotted in the cells?
-    vmax=.3,       # The maximum value of the legend. All higher vals will be same color
-    vmin=-.3,      # The minimum value of the legend. All lower vals will be same color
-    center=0,      # The center value of the legend. With divergent cmap, where white is
-    square=True,   # Force cells to be square
-    linewidths=.5, # Width of lines that divide cells
-    cbar_kws={"shrink": .5}  # Extra kwargs for the legend; in this case, shrink by 50%
-)
+# Plot anzeigen
+fig.show()
 
 
-# #### Oversampling
+# ### Visualisierung der Impuation von gender
 
 # In[32]:
 
 
-X_train_df_os = pd.concat([X_train,y_train],axis=1)
+print(f"Before Imputation: \n{X_train_df['gender'].value_counts(normalize=True)}")
+print('\n')
+print(f"After KNN Imputation: \n{X_train_df_knn['gender'].value_counts(normalize=True)}")
+print('\n')
+print(f"After MICE Imputation: \n{X_train_df_mice['gender'].value_counts(normalize=True)}")
 
-response_no = X_train_df_os[X_train_df_os.response == 'no']
-response_yes = X_train_df_os[X_train_df_os.response == 'yes']
+
+# Hier wenden wir die ONE-HOT Kodierung wieder auf `gender` an und entscheiden uns sowohl bei der Imputation von `age` als auch von `gender` für die Ergebnisse der Imputation vom `KNNImputer`, da diese der uprünglichen Verteilung in den jeweiligen Variablen am Nächsten sind. 
+
+# In[83]:
+
+
+X_train_df_final = pd.get_dummies(X_train_df_knn, columns = ['gender'])
+
+X_test_df_final = pd.get_dummies(X_test_df_knn, columns = ['gender'])
+
+
+# ## Sampling
+
+# #### Oversampling
+
+# In[34]:
+
+
+X_train_df_os = pd.concat([X_train_df_final , y_train_df],axis=1)
+
+response_no = X_train_df_os[X_train_df_os['response'] == 'no']
+response_yes = X_train_df_os[X_train_df_os['response'] == 'yes']
 
 # upsample minority
 response_upsampled = resample(response_yes,
@@ -698,7 +688,7 @@ upsampled = pd.concat([response_no, response_upsampled])
 upsampled.response.value_counts()
 
 
-# In[33]:
+# In[35]:
 
 
 df_upsampled_response = upsampled.groupby(['response']).size().reset_index()
@@ -715,82 +705,56 @@ fig.update_layout(title='Relative Verteilung der Ausprägungen von Response nach
 fig.show()
 
 
-# In[34]:
-
-
-X_train_df_us = pd.concat([X_train_df_knn.reset_index(drop=True), y_train_df.reset_index(drop=True)], axis=1)
-print(X_train_df_us.head())
-
-
 # #### Undersampling mit einem einfachen Modell evaluieren 
 
-# In[35]:
+# In[36]:
 
 
 from imblearn.under_sampling import RandomUnderSampler
 from collections import Counter
 
-# define undersampling strategy
 undersample = RandomUnderSampler(sampling_strategy='auto')
 
-# summarize class distribution
-print("Before undersampling: ", Counter(y_train['response']))
+# Undersampling anwenden
+X_train_under, y_train_under = undersample.fit_resample(X_train_df_final, y_train_label_encoded['response'])
+X_test_under, y_test_under = undersample.fit_resample(X_test_df_final, y_test_label_encoded['response'])
 
-# fit and apply the transform
-X_train_under, y_train_under = undersample.fit_resample(X_train_df_knn, y_train)
-X_test_under, y_test_under = undersample.fit_resample(X_test_df_knn, y_test)
+# Verteilung von train
+print("Before undersampling train: ", Counter(y_train_label_encoded['response']))
+print("After undersampling train: ", Counter(y_train_under))
 
-print(len(X_train_under), len(y_train_under))
-print(len(X_test_under), len(y_test_under))
-# summarize class distribution
-print("After undersampling: ", Counter(y_train_under['response']))
-
-
-from sklearn.svm import SVC
-from sklearn.metrics import classification_report, roc_auc_score
-
-model=SVC()
-clf_under = model.fit(X_train_under, y_train_under)
-pred_under = clf_under.predict(X_test_df_knn)
-
-print("ROC AUC score for undersampled data: ", roc_auc_score(y_test_label_encoded, pred_under))
-
-
-# In[36]:
-
-
-# df_downsampled_response = downsampled.groupby(['response']).size().reset_index()
-# fig = px.bar(df_downsampled_response, x='response', y=downsampled['response'].value_counts(normalize=False), color='response',
-#                                     text=downsampled['response'].value_counts(normalize=False),
-#                                     color_discrete_map={
-#                                         'yes': 'rgb(18,116,117)',
-#                                         'no': 'rgb(20,29,67)'
-#                                     })
-
-# fig.update_layout(title='Relative Verteilung der Ausprägungen von Response nach dem Undersampling',
-#                  xaxis_title='Response',
-#                  yaxis_title='Count')
-# fig.show()
+print('-'*60)
+# Verteilung von test
+print("Before undersampling test: ", Counter(y_test_label_encoded['response']))
+print("After undersampling test: ", Counter(y_test_under))
 
 
 # #### Oversampling \w SMOTE
 
-# SMOTE (Synthetic Minority Oversampling Technique) consists of synthesizing elements for the minority class, based on those that already exist. It works randomly picking a point from the minority class and computing the k-nearest neighbors for this point. The synthetic points are added between the chosen point and its neighbors.
+# SMOTE (Synthetic Minority Oversampling Technique) besteht darin, Elemente für die minority class zu synthetisieren, die auf den bereits vorhandenen Elementen basieren. Dabei wird nach dem Zufallsprinzip eine Zeile aus der minority class ausgewählt und die k-nearest neighbors für dessen Daten berechnet. Die synthetischen Daten werden zwischen dem ausgewählten Zeile und deren Nachbarn eingefügt.
 
-# In[37]:
+# In[84]:
 
 
-# import SMOTE oversampling and other necessary libraries 
+X_train_SMOTE_cross = X_train_df_final.astype('Int64', errors='raise')
+X_train_SMOTE_cross.info()
 
+
+# In[85]:
+
+
+# Pipeline für die Crossvalidierung
 pipeline = imbpipeline(steps = [['smote', SMOTE(sampling_strategy='auto' ,random_state=11, n_jobs=-1)],
                                 ['scaler', MinMaxScaler()],
                                 ['classifier', LogisticRegression(random_state=11,
                                                                   max_iter=1000)]])
 
+# Splitting des Datensatzes
 stratified_kfold = StratifiedKFold(n_splits=5,
                                        shuffle=True,
                                        random_state=11)
 
+# Grid Search mit Parametertuning durchführen
 param_grid = {'classifier__C':[0.001, 0.01, 0.1, 1, 10, 100, 1000]}
 grid_search = GridSearchCV(estimator=pipeline,
                            param_grid=param_grid,
@@ -799,67 +763,136 @@ grid_search = GridSearchCV(estimator=pipeline,
                            n_jobs=-1)
 
 
-grid_search.fit(X_train_df_knn, y_train_df['response'])
+# Modell fitten
+grid_search.fit(X_train_df_final, y_train_df['response'])
+
+# Besten Paramter ausgeben
 print(grid_search.best_params_)
+
+# Modell testen
 cv_score = grid_search.best_score_
-test_score = grid_search.score(X_test_df_knn, y_test_df['response'])
+test_score = grid_search.score(X_test_df_final, y_test_df['response'])
 print(f'Cross-validation score: {cv_score}\nTest score: {test_score}')
 
 
-# In[38]:
+# In[86]:
 
 
 smote = SMOTE()
 
-X_train_SMOTE, y_train_SMOTE = smote.fit_resample(X_train_df_knn, y_train_df['response'])
-X_test_SMOTE, y_test_SMOTE = smote.fit_resample(X_test_df_knn, y_test_df['response'])
+# Oversampling durchführen
+X_train_SMOTE, y_train_SMOTE = smote.fit_resample(X_train_df_final, y_train_label_encoded['response'])
+X_test_SMOTE, y_test_SMOTE = smote.fit_resample(X_test_df_final, y_test_label_encoded['response'])
 
 
-# In[39]:
+# #### Entscheidung für Over- oder Undersampling
+
+# Um uns für ein Samplingverfahren zu entscheiden, wenden wir bei beiden Verfahren einen unangepassten `Random Forest Classifier` an, um uns anhand der Modellgüte einen Eindruck zu verschaffen, ob das Over - bzw. Undersampling an Over - oder Underfitting leidet und wie gut bzw. schlecht die Perfomance der Datensätze, auf Grundlage der beiden Samplingverfahren ist. 
+
+# Oversampling
+
+# In[87]:
 
 
-# Create the correlation matrix
-corr = X_train_SMOTE.corr()
+from sklearn.metrics import confusion_matrix, roc_curve
 
-# Generate a mask for the upper triangle; True = do NOT show
-mask = np.zeros_like(corr, dtype=bool)
-mask[np.triu_indices_from(mask)] = True
+# Modell für den Random Forest instanzieren
+rfc = RandomForestClassifier(n_jobs=-1, random_state=42)
 
-# Set up the matplotlib figure
-f, ax = plt.subplots(figsize=(11, 9))
+# Modell fitten
+rfc.fit(X_train_SMOTE, y_train_SMOTE)
 
-# Generate a custom diverging colormap
-cmap = sns.color_palette("crest", as_cmap=True)
+# absolute und relative Vorhersagen
+res = rfc.predict(X_test_SMOTE)
+resa = rfc.predict_proba(X_test_SMOTE)[:,1]
 
-# Draw the heatmap with the mask and correct aspect ratio
-sns.heatmap(
-    corr,          # The data to plot
-    mask=mask,     # Mask some cells
-    cmap=cmap,     # What colors to plot the heatmap as
-    annot=True,    # Should the values be plotted in the cells?
-    vmax=.3,       # The maximum value of the legend. All higher vals will be same color
-    vmin=-.3,      # The minimum value of the legend. All lower vals will be same color
-    center=0,      # The center value of the legend. With divergent cmap, where white is
-    square=True,   # Force cells to be square
-    linewidths=.5, # Width of lines that divide cells
-    cbar_kws={"shrink": .5}  # Extra kwargs for the legend; in this case, shrink by 50%
+# False Positive, True Postive Rate bestimmen
+fpr, tpr, _ = roc_curve(y_test_SMOTE, resa)
+
+# Fläche unter der False Positive, True Postive Rate berechnen
+roc_auc = roc_auc_score(y_test_SMOTE, resa)
+
+# Area Plot erstellen
+fig = px.area(
+    x=fpr, y=tpr,
+    title=f'ROC-Curve (AUC={np.round(roc_auc, 4)})',
+    labels=dict(x='False Positive Rate', y='True Positive Rate'),
+    width=700, height=500
 )
 
+# Linie des Zufallsmodelles einfügen
+fig.add_shape(
+    type='line', line=dict(dash='dash'),
+    x0=0, x1=1, y0=0, y1=1
+)
 
-# ##### Feature Engineering 
+# Skalierung anpassen
+fig.update_yaxes(scaleanchor="x", scaleratio=1)
+fig.update_xaxes(constrain='domain')
 
-# In[40]:
+# Plot anzeigen
+fig.show()
 
 
-import featuretools as ft
-from feature_engine.creation import CombineWithReferenceFeature
+# Undersampling
+
+# In[88]:
+
+
+# Modell für den Random Forest instanzieren
+rfc = RandomForestClassifier(n_jobs=-1, random_state=42)
+
+# Modell fitten
+rfc.fit(X_train_under, y_train_under)
+
+# absolute und relative Vorhersagen
+res = rfc.predict(X_test_under)
+resa = rfc.predict_proba(X_test_under)[:,1]
+
+# False Positive, True Postive Rate bestimmen
+fpr, tpr, _ = roc_curve(y_test_under, resa)
+
+# Fläche unter der False Positive, True Postive Rate berechnen
+roc_auc = roc_auc_score(y_test_under, resa)
+
+# Area Plot erstellen
+fig = px.area(
+    x=fpr, y=tpr,
+    title=f'ROC-Curve (AUC={np.round(roc_auc, 4)})',
+    labels=dict(x='False Positive Rate', y='True Positive Rate'),
+    width=700, height=500
+)
+
+# Linie des Zufallsmodelles einfügen
+fig.add_shape(
+    type='line', line=dict(dash='dash'),
+    x0=0, x1=1, y0=0, y1=1
+)
+
+# Skalierung anpassen
+fig.update_yaxes(scaleanchor="x", scaleratio=1)
+fig.update_xaxes(constrain='domain')
+
+# Plot anzeigen
+fig.show()
+
+
+# Aufgrund des sehr hohen ROC AUC beim Oversampling, gehen wir davon aus, dass unser synthetisches Oversampling mittels `SMOTE` starkes Overfitting aufweist. Wahrscheinlich würde der `RandomOverSampler` weniger abhängige Werte erzeugen, da wir allerings beim Undersampling auch einen hohen ROC AUC berechnen konnten, entscheiden wir uns lieber für den Verlust an Daten, als den Informationsausstausch beim Oversampling.  
+
+# ## Feature Engineering 
+
+# Da wir vorwiegend kategoriale Variablen im Datensatz vorfinden, sehen wir die Möglichkeit der Generierung von neuen Features als eingeschränkt an. Wir kombinieren lediglich die metrischen Varialen `annual_premium` und `vintage` zu neuen Variablen und nehmen ein Binning bei `age` vor. 
+
+# In[89]:
+
+
 from feature_engine.creation import MathematicalCombination
-from feature_engine.selection import SelectByTargetMeanPerformance
-
 from sklearn.preprocessing import MinMaxScaler, QuantileTransformer, StandardScaler
 
 
-# In[41]:
+# arithmetische Kombination aus den metrischen Variablen `annual_premium` und `vintage`
+
+# In[90]:
 
 
 combinator = MathematicalCombination(
@@ -868,89 +901,209 @@ combinator = MathematicalCombination(
     new_variables_names=['mean_annual_vintage', 'prod_annual_vintage', 'sum_annual_vintage', 'std_annual_vintage']
 )
 
-X_train_df_fe = combinator.fit_transform(X_train_df_knn, y_train)
+X_train_df_fe = combinator.fit_transform(X_train_df_final, y_train)
+X_test_df_fe = combinator.fit_transform(X_test_df_final, y_test)
 
-print(combinator.combination_dict_)
-
-print(X_train_df_fe.loc[:, ['annual_premium', 'vintage', 'mean_annual_vintage', 'prod_annual_vintage', 'sum_annual_vintage', 'std_annual_vintage']].head())
-
-
-# In[42]:
+X_train_df_fe.loc[:, ['annual_premium', 'vintage', 'mean_annual_vintage', 'prod_annual_vintage', 'sum_annual_vintage', 'std_annual_vintage']].head()
 
 
-age_bin = X_train_df_fe[['age']]
+# Binning bei der Variable `age` erstellen
 
-X_train_df_fe['age_bin'] = pd.cut(X_train_df_fe['age'], bins=[18, 40, 60, 80, 100], labels=['18-40', '40-60', '60-80', '80-100'])
-X_train_df_fe.isna().sum()
+# In[91]:
+
+
+X_train_df_fe['age_bin'] = pd.cut(X_train_df_fe['age'], bins=[19, 40, 60, 80, 100], labels=['20-40','40-60','60-80','80-100'])
+X_test_df_fe['age_bin'] = pd.cut(X_test_df_fe['age'], bins=[19, 40, 60, 80, 100], labels=['20-40','40-60','60-80','80-100'])
+
+LE = LabelEncoder()
+
+# Kategoriale Ausprägung von age_bin in numerische Katgorien umwandeln -> Korrelation, Modelling
+X_train_df_fe['age_bin'] = LE.fit_transform(X_train_df_fe['age_bin'])
+X_test_df_fe['age_bin'] = LE.fit_transform(X_test_df_fe['age_bin'])
 
 
 # Standard scaling removes mean and scale data to unit variance.
 
-# In[43]:
+# In[92]:
 
 
 standart_scaler = StandardScaler()
-
-scaled_data = X_train_df_fe[['annual_premium']]
-
 X_train_df_fe['annual_premium_scaled'] = standart_scaler.fit_transform(X_train_df_fe[['annual_premium']])
+X_test_df_fe['annual_premium_scaled'] = standart_scaler.fit_transform(X_test_df_fe[['annual_premium']])
 
+
+print('Train-Batch')
 print('Mean:', X_train_df_fe['annual_premium_scaled'].mean())
 print('Standard Deviation:', X_train_df_fe['annual_premium_scaled'].std())
 
+print('Test-Batch')
+print('Mean:', X_test_df_fe['annual_premium_scaled'].mean())
+print('Standard Deviation:', X_test_df_fe['annual_premium_scaled'].std())
 
-# The most popular scaling technique is normalization (also called min-max normalization and min-max scaling). It scales all data in the 0 to 1 range.
 
-# In[44]:
+# Min Max Skalierung - skaliert alle Ausprägungen auf Werte zwischen 0 und 1 
+
+# In[93]:
 
 
 minmax_scaler = MinMaxScaler()
 
 X_train_df_fe['annual_premium_min_max_scaled'] = minmax_scaler.fit_transform(X_train_df_fe[['annual_premium']])
+X_test_df_fe['annual_premium_min_max_scaled'] = minmax_scaler.fit_transform(X_test_df_fe[['annual_premium']])
 
+print('Train-Batch')
+print('Mean:', X_train_df_fe['annual_premium_min_max_scaled'].mean())
+print('Standard Deviation:', X_train_df_fe['annual_premium_min_max_scaled'].std())
+
+print('Test-Batch')
 print('Mean:', X_train_df_fe['annual_premium_min_max_scaled'].mean())
 print('Standard Deviation:', X_train_df_fe['annual_premium_min_max_scaled'].std())
 
 
-# As we mentioned, sometimes machine learning algorithms require that the distribution of our data is uniform or normal.
+# Quantil Transformation - uniforme Verteilung in der Variable
 
-# In[45]:
+# In[94]:
 
 
 qtrans = QuantileTransformer()
 
 X_train_df_fe['annual_premium_q_trans_uniform'] = qtrans.fit_transform(X_train_df_fe[['annual_premium']])
+X_test_df_fe['annual_premium_q_trans_uniform'] = qtrans.fit_transform(X_test_df_fe[['annual_premium']])
 
+print('Train-Batch')
 print('Mean:', X_train_df_fe['annual_premium_q_trans_uniform'].mean())
 print('Standard Deviation:', X_train_df_fe['annual_premium_q_trans_uniform'].std())
 
+print('Test-Batch')
+print('Mean:', X_test_df_fe['annual_premium_q_trans_uniform'].mean())
+print('Standard Deviation:', X_test_df_fe['annual_premium_q_trans_uniform'].std())
 
-# In[46]:
+
+# Quantil Transformation - normale Verteilung in der Variable
+
+# In[95]:
 
 
 qtrans_normal = QuantileTransformer(output_distribution='normal', random_state=42)
 
 X_train_df_fe['annual_premium_q_trans_normal'] = qtrans_normal.fit_transform(X_train_df_fe[['annual_premium']])
+X_test_df_fe['annual_premium_q_trans_normal'] = qtrans_normal.fit_transform(X_test_df_fe[['annual_premium']])
 
+print('Train-Batch')
 print('Mean:', X_train_df_fe['annual_premium_q_trans_normal'].mean())
 print('Standard Deviation:', X_train_df_fe['annual_premium_q_trans_normal'].std())
 
+print('Test-Batch')
+print('Mean:', X_test_df_fe['annual_premium_q_trans_normal'].mean())
+print('Standard Deviation:', X_test_df_fe['annual_premium_q_trans_normal'].std())
 
-# In[47]:
+
+# In[96]:
 
 
+# Korrelationsplot erstellen
 corr = X_train_df_fe.corr()
-corr.style.background_gradient(cmap='coolwarm').set_precision(2)
+mask = np.zeros_like(corr, dtype=bool)
+mask[np.triu_indices_from(mask)] = True
+corr[mask] = np.nan
+(corr
+ .style
+ .background_gradient(cmap="crest", axis=None, vmin=-1, vmax=1)
+ .highlight_null(null_color='#f1f1f1')  # Color NaNs grey
+ .set_precision(2))
 
 
-# #### Evalutation
-
-# In[48]:
+# In[97]:
 
 
-X_train_SMOTE.to_csv('./data/x_train_clean.csv', sep="$", decimal=".")
-y_train_SMOTE.to_csv('./data/y_train_clean.csv', sep="$", decimal=".")
+# Korrelationsplot erstellen
+corr = X_test_df_fe.corr()
+mask = np.zeros_like(corr, dtype=bool)
+mask[np.triu_indices_from(mask)] = True
+corr[mask] = np.nan
+(corr
+ .style
+ .background_gradient(cmap="crest", axis=None, vmin=-1, vmax=1)
+ .highlight_null(null_color='#f1f1f1')  # Color NaNs grey
+ .set_precision(2))
 
-X_test_SMOTE.to_csv('./data/x_test_clean.csv', sep="$", decimal=".")
-y_test_SMOTE.to_csv('./data/y_test_clean.csv', sep="$", decimal=".")
+
+# #### Bewertung des Feature Engineerings mittels Logistischer Regression 
+
+# In[98]:
+
+
+# Modell für die logistische Regression instanzieren
+lrg = LogisticRegression(random_state=11, max_iter=1000)
+
+# Splitting vornehmen
+stratified_kfold = StratifiedKFold(n_splits=5,
+                                       shuffle=True,
+                                       random_state=11)
+
+# Grid Search mit Parametertuning durchführen
+param_grid = {'C':[0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+grid_search = RandomizedSearchCV(estimator=lrg,
+                           param_distributions=param_grid,
+                           scoring='roc_auc',
+                           cv=stratified_kfold,
+                           n_jobs=-1)
+
+
+# Modell fitten
+lrg_model = grid_search.fit(X_train_df_fe, y_train_df['response'])
+
+print(lrg_model.best_params_)
+
+cv_score = lrg_model.best_score_
+
+# absolute und relative Vorhersagen treffen
+y_pred = lrg_model.predict(X_test_df_fe)
+y_pred_proba = lrg_model.predict_proba(X_test_df_fe)[:,1]
+print(f'Cross-validation score: {cv_score}')
+
+
+# In[99]:
+
+
+# False Positive, True Postive Rate bestimmen
+fpr, tpr, _ = roc_curve(y_test_label_encoded['response'], y_pred_proba)
+
+# Fläche unter der False Positive, True Postive Rate berechnen
+auc_score = roc_auc_score(y_test_label_encoded['response'], y_pred_proba)
+
+# Area Plot erstellen
+fig = px.area(
+    x=fpr, y=tpr,
+    title=f'ROC-Curve (AUC={auc(fpr, tpr):.4f})',
+    labels=dict(x='False Positive Rate', y='True Positive Rate'),
+    width=700, height=500
+)
+
+# Linie des Zufallsmodelles einfügen
+fig.add_shape(
+    type='line', line=dict(dash='dash'),
+    x0=0, x1=1, y0=0, y1=1
+)
+
+# Skalierung anpassen
+fig.update_yaxes(scaleanchor="x", scaleratio=1)
+fig.update_xaxes(constrain='domain')
+
+# Plot erstellen
+fig.show()
+
+
+# Aufgrund der niedrigen Korellation zwischen den, von uns neu generierten Variablen und den ursprünglichen, gehen wir nicht davon aus, dass diese unsere Daten besser beschreiben können und einen Mehrwert beim Modelling darstellen. Die gleiche Aussage lässt sich nach der Auswerung der logistischen Regression treffen, da sich der ROC AUC unterhalb der Kurve des Zufallsmodelles befindet. Daher haben wir uns dazu entschieden, keine neuen Features in den Trainingsdatensatz aufzunehmen. 
+
+# Exportieren der finalen Trains - und Testdaten als csv Dateien
+
+# In[100]:
+
+
+X_train_under.to_csv('../data/x_train_clean.csv', sep="$", decimal=".")
+y_train_under.to_csv('../data/y_train_clean.csv', sep="$", decimal=".")
+
+X_test_under.to_csv('../data/x_test_clean.csv', sep="$", decimal=".")
+y_test_under.to_csv('../data/y_test_clean.csv', sep="$", decimal=".")
 

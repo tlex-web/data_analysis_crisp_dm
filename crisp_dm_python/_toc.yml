@@ -1,8 +1,8 @@
 format: jb-book
-root: notebooks/business_understanding
+root: ../business_understanding
 chapters:
-    - file: notebooks/data_understanding
-    - file: notebooks/data_preparation
-    - file: notebooks/modelling
-    - file: notebooks/deployment
-    - file: quellen
+    - file: ../data_understanding
+    - file: ../data_preparation
+    - file: ../modelling
+    - file: ../deployment
+    - file: ../quellen

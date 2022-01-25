@@ -2,7 +2,6 @@
 # coding: utf-8
 
 # # Data Understanding
-# {ref}`beabe`
 
 # In[1]:
 
@@ -21,37 +20,6 @@ import plotly.offline as py
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot
 
 import seaborn as sns
-import missingno as msno
-
-
-from sklearn.model_selection import KFold
-from sklearn.impute import SimpleImputer
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import IterativeImputer
-from sklearn.linear_model import BayesianRidge
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.impute import KNNImputer
-from sklearn.svm import SVR
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-
-from sklearn.utils import resample
-from sklearn.model_selection import cross_val_score
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error as mse
-
-from imblearn.over_sampling import SMOTE
-
-import featuretools as ft
-
-import tensorflow as tf
 
 
 # In[2]:
@@ -59,12 +27,9 @@ import tensorflow as tf
 
 def read_and_set_df(filepath: str, train: bool) -> pd.DataFrame:
 
-    # with open(filepath) as file:
-    # file.readlines()
-
     # Datensatz einlesen
-    df = pd.read_csv(filepath, sep='$',  # r'([$-,])+/g'
-                     decimal=".", engine='python')  # , na_values=[np.nan, pd.NA], keep_default_na=True)
+    df = pd.read_csv(filepath, sep='$',
+                     decimal=".", engine='python') 
 
     # Spaltennamen alle kleingeschrieben
     df.columns = df.columns.str.lower()
@@ -144,86 +109,108 @@ def set_datatypes(df: pd.DataFrame) -> pd.DataFrame:
         {'0': 'no', '1': 'yes', 1: 'yes', 0: 'no'}, inplace=True)
     df['response'] = df['response'].astype('category')
 
-    #df = df.replace(to_replace=['NaN', '<NA>', 'NAN', 'nan',
-    #                pd.NA, np.nan, np.NaN, np.NAN], value=np.NaN, inplace=True)
-
     return df
 
+
+# Nun wenden wir die zuvor definierte Funktion auf dem train.csv Datensatz an.
 
 # In[3]:
 
 
 df = read_and_set_df('../data/train.csv', train=False)
 
+# Anwenden der zuvor definierten Funktion auf df
 set_datatypes(df)
 
 
+# Um einen ersten Überblick über die Variablen zu erahlten, werden zunächst folgende statistische Kennzahlen verwendet.
+
 # In[4]:
-
-
-ind = df['gender'].isna()
-df['gender'].loc[ind].unique()
-
-
-# In[5]:
-
-
-df[df['age'].isnull()]
-
-
-# In[6]:
 
 
 # transpose = Tabelle transponieren für eine bessere Ansicht
 df.describe(include='all').transpose()
 
 
-# In[7]:
+# - `id`: min=1, max=380.999 -> es liegt eine fortlaufende Nummerierung der ID vor
+# - `gender`: zwei Ausprägungen von Male und Female, in der Variable sind zudem Missing Values enthalten
+# - `age`: min = 20, max = 205 -> extrem hoher max Wert. Deutet auf Ausreißer hin, enhält Missing Values
+# - `driving_license`: enthält ebenfalls Missing Values, zwei Ausprägungen
+# - `region_code`: keine Missing Values, 53 verschiedene Region Codes
+# - `previously_insured`: enhält Missing Values, insgesamt zwei Ausprägungen
+# - `vehicle_age`: enhält Missing Values, drei Ausprägungen
+# - `vehicle_damage`: enhält Missing Values, zwei Ausprägungen
+# - `annual_premium`: keine Missing Values, min = -9997, max=540.165, negative Werte erscheinen hier nicht logisch, Hohe Differenz zwischen Mean und Max deuten auf Ausreißer hin
+# - `policy_sales_channel`: keine Missing Values, Channels von 1 bis 163
+# - `vintage`: enthält Missing Values, min=10, max=299
+# - `response`: Zielvarible enthält keine Missing Values, zwei Ausrägungen, top-Ausprägung ist no
+
+# In[5]:
 
 
+# Absolute Anzahl der Missing Values je Variable ausgeben lassen
 pd.isna(df).sum()
 
+
+# In diesem Schritt lassen wir uns die absolute Anzahl der Missing Values je Varialbe ausgeben
+# 
+# - Es wird ersichtlich, dass die meisten Missing Values in der Variable `age` vorliegen.
+# - In der Variable `gender` liegen 1051 Missing Values.
+# - In den Variablen `driving_license`, `previously_insured`, `vehicle_age`, `vehicle_damage` und `vintage` sind jeweils 51 Missing Values. 
+# - In den restlichen Variablen sind keine Missing Values.
 
 # # Grafische Datenanalyse
 # 
 # ## Geschlechtsverteilung
 # 
 
-# In[8]:
+# In[6]:
 
 
-dff = df['gender'].value_counts()[:10]
+# Absolute Anzahl von Male und Female in dff abspeichern
+dff = df['gender'].value_counts()[:10] 
+
+# Label für den Pie chart festlegen
 label = dff.index
+
+# Summe der Ausprägungen je Label
 size = dff.values
 
+# Farben definieren und pie chart erzeugen
 colors = ['rgb(20,29,67)', 'rgb(18,116,117)']
 trace = go.Pie(labels=label, values=size, marker=dict(colors=colors), hole=.2)
 
 data = [trace]
+
+# Titel hinzufügen
 layout = go.Layout(
     title='Geschlechtsverteilung'
 )
 
+# Plot erzeugen mit den zuvor definierten Spezifikationen
 fig = go.Figure(data=data, layout=layout)
 py.iplot(fig)
 
 
+# In dem Datensatz befinden sich zu 45,9% Frauen und zu 54,1% Männer. Somit besteht ein sehr ausgewogenes Verhältnis zwischen Frauen und Männern in dem Datensatz!
+
 # ## Vehicle Age
 # 
 
-# In[9]:
+# In[7]:
 
 
-df_vehicle_age = round(df['vehicle_age'].value_counts(normalize=True).
-                       to_frame().sort_index(), 4)
-male_to_vehicle_age = round(df[df['gender'] == 'Male']
-                            ['vehicle_age'].value_counts(normalize=True).
-                            to_frame().sort_index(), 4)
-female_to_vehicle_age = round(df[df['gender'] == 'Female']
-                              ['vehicle_age'].value_counts(normalize=True).
-                              to_frame().sort_index(), 4)
+# Prozentuale Verteilung je Kategorie in vehicle age absteigend nach 
+# den höchsten Werten in einem df ablegen
+df_vehicle_age = round(df['vehicle_age'].value_counts(normalize=True).to_frame().sort_index(), 4)
 
+# Den gleichen DataFrame erstellen wir respektive für Male und female
+male_to_vehicle_age = round(df[df['gender'] == 'Male']['vehicle_age'].value_counts(normalize=True).to_frame().sort_index(), 4)
+female_to_vehicle_age = round(df[df['gender'] == 'Female']['vehicle_age'].value_counts(normalize=True).to_frame().sort_index(), 4)
+
+# Hier spezifizieren wir für gesamt, male und female jeweils einen Bar Chart
 trace = [
+    #Bar Chart für gesamt
     go.Bar(x=df_vehicle_age.index,
            y=df_vehicle_age['vehicle_age'],
            opacity=0.8,
@@ -235,7 +222,7 @@ trace = [
                reversescale=True,
                showscale=True)
            ),
-
+    # Bar Chart für Male
     go.Bar(x=male_to_vehicle_age.index,
            y=male_to_vehicle_age['vehicle_age'],
            visible=False,
@@ -248,7 +235,7 @@ trace = [
                reversescale=True,
                showscale=True)
            ),
-
+    # Bar Chart für female
     go.Bar(x=female_to_vehicle_age.index,
            y=female_to_vehicle_age['vehicle_age'],
            visible=False,
@@ -263,17 +250,18 @@ trace = [
            )
 ]
 
-layout = go.Layout(title='',
-                   paper_bgcolor='rgb(240, 240, 240)',
+# Layout konfigurieren
+layout = go.Layout(title=dict(text='Vehicle Age', y=.95),
                    plot_bgcolor='rgb(240, 240, 240)',
                    autosize=True,
-                   xaxis=dict(title="",
-                              titlefont=dict(size=20),
+                   xaxis=dict(title="vehicle_age",
+                              titlefont=dict(size=15),
                               tickmode="linear"),
                    yaxis=dict(title="%",
-                              titlefont=dict(size=17)),
+                              titlefont=dict(size=20)),
                    )
 
+# Attribute für das DropDown-Menü definieren
 updatemenus = list([
     dict(
         buttons=list([
@@ -303,23 +291,39 @@ updatemenus = list([
 ])
 layout['updatemenus'] = updatemenus
 
+# Plot erzeugen
 fig = dict(data=trace, layout=layout)
 py.iplot(fig)
 
 
-# In[10]:
+# __Gesamt:__ 
+# - In dem oberen Plot kann man erkennen, dass 52,56% der Kunden ein Auto besitzen, das zwischen einem und zwei Jahre alt ist.  
+# - 43,24% der Kunden besitzen ein Auto, das nicht älter als ein Jahr ist.
+# - Lediglich 4,2% der gesamten Kunden in dem Datensatz besitzen ein Auto, das älter als zwei Jahre ist. 
+# 
+# __Male:__
+# - Von den männlichen Kunden in dem Datensatz besitzen ebefalls mehr als die Hälte ein Auto, das zwischen einem und zwei Jahren alt ist. 
+# - Darüber hinaus besitzen 35,65% ein Auto das nicht älter als ein Jahr ist und 5% ein Auto, das älter als zwei Jahre ist.
+# 
+# __Female:__
+# - Bei den weiblichen Kunden unterscheidet sich die Verteilung. Hier besitzt die Mehrheit ein Auto, das noch kein Jahr alt ist. 
+# - 44,56% besitzen ein Auto, dass zwischen einem und zwei Jahre alt ist. Ein Auto, das älter als zwei Jahre ist, besitzen lediglich 3,26% der weiblichen Kunden. 
+# 
+# 
+
+# In[8]:
 
 
-df_region_code = round(df['region_code'].value_counts(normalize=True).
-                       to_frame().sort_index(), 4)
-male_to_region_code = round(df[df['gender'] == 'Male']
-                            ['region_code'].value_counts(normalize=True).
-                            to_frame().sort_index(), 4)
-female_to_region_code = round(df[df['gender'] == 'Female']
-                              ['region_code'].value_counts(normalize=True).
-                              to_frame().sort_index(), 4)
+# Prozentuale Verteilung je Kategorie in region_code absteigend nach 
+# den höchsten Werten in einem df ablegen
+df_region_code = round(df['region_code'].value_counts(normalize=True).to_frame().sort_index(), 4)
+
+# Den gleichen DataFrame erstellen wir respektive für Male und female
+male_to_region_code = round(df[df['gender'] == 'Male']['region_code'].value_counts(normalize=True).to_frame().sort_index(), 4)
+female_to_region_code = round(df[df['gender'] == 'Female']['region_code'].value_counts(normalize=True).to_frame().sort_index(), 4)
 
 trace = [
+    # Barchart für die Verteilung in der Variable region_code insgesamt erstellen
     go.Bar(x=df_region_code.index,
            y=df_region_code['region_code'],
            opacity=0.8,
@@ -332,6 +336,7 @@ trace = [
                showscale=True)
            ),
 
+    # Barchart für die Verteilung bei male
     go.Bar(x=male_to_region_code.index,
            y=male_to_region_code['region_code'],
            visible=False,
@@ -345,6 +350,7 @@ trace = [
                showscale=True)
            ),
 
+    # Barchart für die Verteilung bei female
     go.Bar(x=female_to_region_code.index,
            y=female_to_region_code['region_code'],
            visible=False,
@@ -359,17 +365,18 @@ trace = [
            )
 ]
 
-layout = go.Layout(title='',
-                   paper_bgcolor='rgb(240, 240, 240)',
+# Layout des Plots definieren
+layout = go.Layout(title=dict(text='Region Code Verteilung', y=.95),
                    plot_bgcolor='rgb(240, 240, 240)',
                    autosize=True,
-                   xaxis=dict(title="",
-                              titlefont=dict(size=20),
+                   xaxis=dict(title="Region Code",
+                              titlefont=dict(size=16),
                               tickmode="linear"),
                    yaxis=dict(title="%",
                               titlefont=dict(size=17)),
                    )
 
+# Attribute für das DropDown-Menü definieren
 updatemenus = list([
     dict(
         buttons=list([
@@ -399,24 +406,137 @@ updatemenus = list([
 ])
 layout['updatemenus'] = updatemenus
 
+# Plot erstellen
 fig = dict(data=trace, layout=layout)
 py.iplot(fig)
 
 
-# # Kategroische Variablen in Relation zur Zielvariable
+# Wenn man sich die relativen Auspägungen der einzelnen Region Codes anschaut, fällt direkt auf, dass fast 28% der Kunden dem Region Code 28 zugeordnet sind. Des Weiteren sind ca. 9% der Kunden mit dem Region Code 8 klassifziert. Hierauf folgen Code 41 und 46 mit ca. 5%. Die restlichen Region Codes weisen einen relativen Anteil von unter 5% auf.
+
+# In[9]:
+
+
+# Prozentuale Verteilung je Kategorie in policy_sales_channel absteigend nach 
+# den höchsten Werten in einem df ablegen
+df_policy_sales_channel = round(df['policy_sales_channel'].value_counts(normalize=True).to_frame().sort_index(), 4)
+
+# Den gleichen DataFrame erstellen wir respektive für Male und female
+male_to_policy_sales_channel = round(df[df['gender'] == 'Male']['policy_sales_channel'].value_counts(normalize=True).to_frame().sort_index(), 4)
+female_to_policy_sales_channel = round(df[df['gender'] == 'Female']['policy_sales_channel'].value_counts(normalize=True).to_frame().sort_index(), 4)
+
+trace = [
+    # Barchart für die Verteilung insgesamt
+    go.Bar(x=df_policy_sales_channel.index,
+           y=df_policy_sales_channel['policy_sales_channel'],
+           opacity=0.8,
+           name="total",
+           hoverinfo="y",
+           marker=dict(
+               color=df_policy_sales_channel['policy_sales_channel'],
+               colorscale='ice',
+               reversescale=True,
+               showscale=True)
+           ),
+
+    # Barchart für die Verteilung bei male
+    go.Bar(x=male_to_policy_sales_channel.index,
+           y=male_to_policy_sales_channel['policy_sales_channel'],
+           visible=False,
+           opacity=0.8,
+           name="male",
+           hoverinfo="y",
+           marker=dict(
+               color=male_to_policy_sales_channel['policy_sales_channel'],
+               colorscale='ice',
+               reversescale=True,
+               showscale=True)
+           ),
+
+
+    # Barchart für die Verteilung bei female
+    go.Bar(x=female_to_policy_sales_channel.index,
+           y=female_to_policy_sales_channel['policy_sales_channel'],
+           visible=False,
+           opacity=0.8,
+           name="female",
+           hoverinfo="y",
+           marker=dict(
+               color=female_to_policy_sales_channel['policy_sales_channel'],
+               colorscale='ice',
+               reversescale=True,
+               showscale=True)
+           )
+]
+
+# Layout des Plots definieren
+layout = go.Layout(title=dict(text='Policy Sales Channel', y=.95),
+                   plot_bgcolor='rgb(240, 240, 240)',
+                   autosize=True,
+                   xaxis=dict(title="Policy Sales Channel",
+                              titlefont=dict(size=16),
+                              tickmode="linear"),
+                   yaxis=dict(title="%",
+                              titlefont=dict(size=17)),
+                   )
+
+# Attribute für das DropDown-Menü definieren
+updatemenus = list([
+    dict(
+        buttons=list([
+            dict(
+                args=[{'visible': [True, False, False, False, False, False]}],
+                label="Total",
+                method='update',
+            ),
+            dict(
+                args=[{'visible': [False, True, False, False, False, False]}],
+                label="Male",
+                method='update',
+            ),
+            dict(
+                args=[{'visible': [False, False, True, False, False, False]}],
+                label="Female",
+                method='update',
+            ),
+
+        ]),
+        direction="down",
+        pad={'r': 10, "t": 10},
+        x=0.1,
+        y=1.25,
+        yanchor='top',
+    ),
+])
+layout['updatemenus'] = updatemenus
+
+# Plot erstellen
+fig = dict(data=trace, layout=layout)
+py.iplot(fig)
+
+
+# In der oberen Grafik wird deutlich, dass fast 80% der gesamten Kunden in dem Datensatz den Policy Sales Channels 26, 124 und 152 zugeordnet sind. 
+# 
+# Auffäligkeiten: Es gibt extrem viele Vertriebskanäle, über die nur sehr wenige bis keine Kunden angesprochen werden. 
+
+# # Kategorische Variablen in Relation zur Zielvariable
 # 
 # ### Gender zur Zielvariable
 # 
 
-# In[11]:
+# In[10]:
 
 
-# Gender zur Zielvariable
+# DataFrame von gender im Verhältnis zu response 
 df_g = df.groupby(['gender', 'response']).size().reset_index()
-df_g['percentage'] = df.groupby(['gender', 'response']).size().groupby(
-    level=0).apply(lambda x: 100 * x / float(x.sum())).values
+
+# Die relativen prozentualen Anteile der Variable response im Verhältnis
+# zur Variable gender als neue Spalte speichern
+df_g['percentage'] = df.groupby(['gender', 'response']).size().groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).values
+
+# Variablennamen übergeben
 df_g.columns = ['gender', 'response', 'Counts', 'Percentage']
 
+# Bar Chart definieren
 fig = px.bar(df_g, x='gender', y=['Counts'], color='response',
              text=df_g['Percentage'].apply(lambda x: '{0:1.2f}%'.format(x)),
              color_discrete_map={
@@ -424,24 +544,35 @@ fig = px.bar(df_g, x='gender', y=['Counts'], color='response',
     'no': 'rgb(20,29,67)'
 })
 
+# Layout erstellen
 fig.update_layout(title='Gender in Bezug zur Zielvariable',
                   xaxis_title='Gender',
                   yaxis_title='Count')
+
+# Plot erzeugen                  
 fig.show()
 
+
+# Es gibt mehr Männer als Frauen in dem Datensatz. Darüber hinaus wird ersichtlich, dass relativ betrachtet, mehr Männer als Frauen eine Autoversicherung abgeschlossen haben.
 
 # ### Driving_License zur Zielvariable
 # 
 
-# In[12]:
+# In[11]:
 
 
-# driving_license zur Zielvariable
+# DataFrame von driving_license im Verhältnis zu response
 df_dl = df.groupby(['driving_license', 'response']).size().reset_index()
+
+# Die relativen prozentualen Anteile der Variable response im Verhältnis
+# zur Variable driving_license als neue Spalte speichern
 df_dl['percentage'] = df.groupby(['driving_license', 'response']).size(
 ).groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).values
+
+# Variablennamen übergeben
 df_dl.columns = ['driving_license', 'response', 'Counts', 'Percentage']
 
+# Barplot für driving_license und response erstellen und das Layout definieren
 fig = px.bar(df_dl, x='driving_license', y=['Counts'], color='response',
              text=df_dl['Percentage'].apply(lambda x: '{0:1.2f}%'.format(x)),
              color_discrete_map={
@@ -449,74 +580,107 @@ fig = px.bar(df_dl, x='driving_license', y=['Counts'], color='response',
     'no': 'rgb(20,29,67)'
 })
 
-fig.update_layout(title='Driving_License in Bezug zur Zielvariable',
-                  xaxis_title='Driving_License',
+# Achsenbeschriftung hinzufügen
+fig.update_layout(title='Driving License in Bezug zur Zielvariable',
+                  xaxis_title='Driving License',
                   yaxis_title='Count')
+
+# Plot erstellen
 fig.show()
 
+
+# - Absolute Betrachtung: Es gibt mehr Kunden, die keinen Führerschein besitzen
+# - Auffällig ist, dass fast ausschließlich Kunden ohne Führeschein eine Autoversicherung abgeschlossen haben. Diese Erkenntnis wirkt auf den esten Blick kontraintuitiv. Man sollte annehmen, dass nur Kunden, die einen Führerschein besitzen auch eine Autoversicherung abschließen.
+# - Mögliche wäre, dass man für den Abschluss einer Versicherung keinen Nachweis über den Besitz eines Führerscheins vorlegen muss, und Eltern ihre Kinder als Versicherungsnehmer eintragen lassen. 
 
 # ### Previously_Insured zur Zielvariable
 # 
 
-# In[13]:
+# In[12]:
 
 
-# previously_insured zur Zielvariable
+# DataFrame von previously_insured zur Zielvariable
 df_pi = df.groupby(['previously_insured', 'response']).size().reset_index()
+
+# Die relativen prozentualen Anteile der Variable response im Verhältnis
+# zur Variable previously_insured als neue Spalte speichern
 df_pi['percentage'] = df.groupby(['previously_insured', 'response']).size(
 ).groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).values
 df_pi.columns = ['previously_insured', 'response', 'Counts', 'Percentage']
 
-fig2 = px.bar(df_pi, x='previously_insured', y=['Counts'], color='response',
+# Barplot für previously_insured und response erstellen und das Layout definieren
+fig = px.bar(df_pi, x='previously_insured', y=['Counts'], color='response',
               text=df_pi['Percentage'].apply(lambda x: '{0:1.2f}%'.format(x)),
               color_discrete_map={
     'yes': 'rgb(18,116,117)',
     'no': 'rgb(20,29,67)'
 })
 
-fig2.update_layout(title='previously_insured in Bezug zur Zielvariable',
+# Achsenbeschriftung hinzufügen
+fig.update_layout(title='previously_insured in Bezug zur Zielvariable',
                    xaxis_title='previously_insured',
                    yaxis_title='Count')
-fig2.show()
 
+# Plot erstellen
+fig.show()
+
+
+# Es schließen fast ausschließlich Kunden eine Autoversicherung ab, die akutell noch keine Autoversicherung haben. 
 
 # ### Vehicle_Age zur Zielvariable
 # 
 
-# In[14]:
+# In[13]:
 
 
-# vehicle_age zur Zielvariable
+# DataFrame von previously_insured zur Zielvariable
 df_va = df.groupby(['vehicle_age', 'response']).size().reset_index()
+
+# Die relativen prozentualen Anteile der Variable response im Verhältnis
+# zur Variable vehicle_age als neue Spalte speichern
 df_va['percentage'] = df.groupby(['vehicle_age', 'response']).size().groupby(
     level=0).apply(lambda x: 100 * x / float(x.sum())).values
 df_va.columns = ['vehicle_age', 'response', 'Counts', 'Percentage']
 
-fig2 = px.bar(df_va, x='vehicle_age', y=['Counts'], color='response',
+# Barplot für vehicle_age und response erstellen und das Layout definieren
+fig = px.bar(df_va, x='vehicle_age', y=['Counts'], color='response',
               text=df_va['Percentage'].apply(lambda x: '{0:1.2f}%'.format(x)),
               color_discrete_map={
     'yes': 'rgb(18,116,117)',
     'no': 'rgb(20,29,67)'
 })
 
-fig2.update_layout(title='vehicle_age in Bezug zur Zielvariable',
+# Achsenbeschriftung hinzufügen
+fig.update_layout(title='vehicle_age in Bezug zur Zielvariable',
                    xaxis_title='vehicle_age',
                    yaxis_title='Count')
-fig2.show()
 
+# Plot erstellen
+fig.show()
+
+
+# Der Großteil der Kunden besitzt ein Auto, das nicht älter als 2 Jahre alt ist. Darüber hinaus fällt auf, dass Kunden mit einem Auto, dass älter als 1 Jahr alt ist, eine Autoversicherung abschließen (z.B. Wechsel der Versicherung bei Gebrauchtwagenkauf). 
+# 
+# - Man sollte annehmen, dass Kunden im Anschluss an den Kauf eine Autoversicherung abschließen (also in die Kategorie unter einem Jahr fallen).
+# - Der absolute Anteil an Kunden, die eine Autoversicherung abschließen => besitzen ein Auto, das zwischen 1-2 Jahre alt ist. 
+# - Somit lassen bei der NextGenInsurance GmbH mehr Kunden eine Gebrauchtwagen versichern als Neuwagen. 
 
 # ### Vehicle_Damage zur Zielvariable
 # 
 
-# In[15]:
+# In[14]:
 
 
-# vehicle_damage zur Zielvariable
+# DataFrame von previously_insured zur Zielvariable
 df_vg = df.groupby(['vehicle_damage', 'response']).size().reset_index()
+
+# Die relativen prozentualen Anteile der Variable response im Verhältnis
+# zur Variable vehicle_damage als neue Spalte speichern
 df_vg['percentage'] = df.groupby(['vehicle_damage', 'response']).size(
 ).groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).values
 df_vg.columns = ['vehicle_damage', 'response', 'Counts', 'Percentage']
 
+# Barplot für vehicle_age und response erstellen und das Layout definieren
 fig = px.bar(df_vg, x='vehicle_damage', y=['Counts'], color='response',
              text=df_vg['Percentage'].apply(lambda x: '{0:1.2f}%'.format(x)),
              color_discrete_map={
@@ -524,20 +688,27 @@ fig = px.bar(df_vg, x='vehicle_damage', y=['Counts'], color='response',
     'no': 'rgb(20,29,67)'
 })
 
+# Achsenbeschriftung hinzufügen
 fig.update_layout(title='Vehicle_Damage in Bezug zur Zielvariable',
                   xaxis_title='Vehicle_Damage',
                   yaxis_title='Count')
+
+# Plot erstellen
 fig.show()
 
+
+# In dem Plot fällt auf, dass fast ausschließlich Kunden eine Autoversicherung abschließen, die bereits einen Schaden an ihrem Auto haben. Darüber hinaus ist der Anteil von Kunden mit und ohne einen Schaden an ihrem Auto sehr ausgeglichen. 
 
 # ### Response
 # 
 
-# In[16]:
+# In[15]:
 
 
-# Response
+# DataFrame von der Variable response erzeugen
 df_response = df.groupby(['response']).size().reset_index()
+
+# Barplot der prozentualen Anteile in der Ausprägung von response erstellen
 fig = px.bar(df_response, x='response', y=df['response'].value_counts(normalize=True), color='response',
              text=df['response'].value_counts(normalize=True).apply(
                  lambda x: '{0:1.2f}%'.format(x)),
@@ -546,11 +717,16 @@ fig = px.bar(df_response, x='response', y=df['response'].value_counts(normalize=
     'no': 'rgb(20,29,67)'
 })
 
+# Achsenbeschriftung hinzufügen
 fig.update_layout(title='Relative Verteilung der Auprägungen von Response',
                   xaxis_title='Response',
                   yaxis_title='Count')
+
+# Plot erstellen
 fig.show()
 
+
+# In der oberen Grafik wird die starke Unbalanciertheit der Zielvariable deutlich. Lediglich 12% der gesamten Kunden in dem Datensatz haben eine Autoversicherung abgeschlossen.
 
 # ## Numerische Variablen darstellen
 # 
@@ -563,16 +739,14 @@ fig.show()
 # ### Age
 # 
 
-# In[17]:
+# In[16]:
 
 
-# Data Frame mit den Variablen age und response erstellen
-df_age_response = df[['age', 'response']]
-df_age_response = df_age_response.dropna()
+# DataFrame mit den Variablen age und response erstellen
+df_age_response = df[['age', 'response']].interpolate(method='ffill')
 
-# Age = response ist yes
+# 
 age_response_yes = df_age_response[df_age_response['response'] == 'yes']
-
 
 # Age = response ist no
 age_response_no = df_age_response[df_age_response['response'] == 'no']
@@ -580,7 +754,7 @@ age_response_no = df_age_response[df_age_response['response'] == 'no']
 dmax = 8
 dmin = 0
 
-# Histogram
+# Histogram erstellen
 fig = px.histogram(df_age_response, x="age", color="response",
                    marginal='box', histnorm='percent')
 fig.update_layout(barmode='overlay')  # man kann auch stacked verwenden
@@ -613,21 +787,40 @@ fig.update_layout(
 fig.show()
 
 
+# - Minimun Alter  = 20 Jahre -> In Indien ist man mit 18 Jahren volljährig. 
+# - Maximum Alter = 205 Jahre -> Erscheint nicht realistisch, da die durchschnittliche Lebenserwartungen in Indien unter 70 Jahren liegt. 
+# 
+# Response = Yes:
+# - 25% der Kunden sind zwischen 20 und 34 Jahren alt
+# - 50% der Kunden sind zwischen 34 und 50 Jahren alt
+# - Der Median liegt bei 43 Jahren 
+# - Der Mittelwert liegt aufgrund der Ausreißer bei ca. 43 Jahren
+# - Der Älteste Kunde in der Klasse ist 198 Jahre alt
+# 
+# 
+# Response = No:
+# - 25% der Kunden sind zwischen 20 und 24 Jahren alt
+# - 50% der Kunden sind zwischen 24 und 49 Jahren alt
+# - Der Median liegt bei 32 Jahren 
+# - Der Mittelwert liegt aufgrund der zahlreichen Ausreißer bei ca. 38 Jahren
+# - Der Älteste Kunde in der Klasse ist 205 Jahre alt
+
 # ### Annual Premium
 # 
 
-# In[18]:
+# In[17]:
 
 
 # Data Frame mit den Beiden variablen erzeugen
 df_annual_premium = df[['annual_premium', 'response']]
+
+#df_annual_premium['annual_premium'] = np.log10(df_annual_premium[['annual_premium']])
 
 # annual_premium = response ist yes
 annual_premium_response_yes = df_annual_premium[df_annual_premium['response'] == 'yes']
 
 # annual_premium = response ist no
 annual_premium_response_no = df_annual_premium[df_annual_premium['response'] == 'no']
-
 
 # Histogram definieren
 fig = px.histogram(df_annual_premium, x="annual_premium",
@@ -637,19 +830,19 @@ fig.update_traces(opacity=0.65)
 
 # Mittlewert age von response = "yes"
 fig.add_trace(go.Scatter(x=[np.mean(annual_premium_response_yes['annual_premium']), np.mean(annual_premium_response_yes['annual_premium'])],
-                         y=[0, 10000],
-                         mode='lines', opacity=.4,
+                         y=[0, 10],
+                         mode='lines', opacity=.5,
                          line=dict(color='#1f77b4', width=2, dash='dash'),
-                         name=f'Median: {np.round(np.mean(annual_premium_response_yes["annual_premium"]), 2)}')
+                         name=f'Mean: {np.round(np.mean(annual_premium_response_yes["annual_premium"]), 2)}')
               )
 
 # Mittlewert annual_premium von response = "no"
 fig.add_trace(go.Scatter(x=[np.mean(annual_premium_response_no['annual_premium']), np.mean(annual_premium_response_no['annual_premium'])],
-                         y=[0, 10000],
+                         y=[0, 10],
                          mode='lines',
                          line=dict(color='rgba(248, 118, 109, 0.5)',
                                    width=2, dash='dash'),
-                         name=f'Median: {np.round(np.mean(annual_premium_response_no["annual_premium"]), 2)}')
+                         name=f'Mean: {np.round(np.mean(annual_premium_response_no["annual_premium"]), 2)}')
               )
 
 # Sklaierung der Achsen anpassen
@@ -663,16 +856,23 @@ fig.update_layout(
 fig.show()
 
 
+# - Minimun Annual Premium  = -9.99k Rs -> negative Werte bei Annual Premium  
+# - Maximum Annual Premium = 540.165k  Rs -> Extrem hoher Anteil an 
+# - Auffällig ist die große Spannweite an Ausreißern zwischen 60 und 540.165k 
+# 
+# - Die Verteilung von Annual Premium je nach Ausprägung der Zielvariable ist sehr ähnlich
+# - Darüber hinaus liegen 16,84% bei `response = no` zwischen 2500 und 2999 Rs
+# - Darüber hinaus liegen 18,19% bei `response = yes` zwischen 2500 und 2999 Rs
+
 # ## Vintage
 # 
 
-# In[19]:
+# In[18]:
 
 
 # Data Frame mit den Variablen vintage und response erstellen und NaN mit 0 ersetzen
-df_vintage_response = df[['vintage', 'response']]
+df_vintage_response = df[['vintage', 'response']].interpolate(method='ffill')
 df_vintage_response['vintage'] = df_vintage_response['vintage']
-df_vintage_response = df_vintage_response.dropna()
 
 
 # Vintage = response ist yes
@@ -688,7 +888,7 @@ fig.update_layout(barmode='overlay')  # man kann auch stacked verwenden
 fig.update_traces(opacity=0.65)
 
 # Skalierung der Achsen anpassen
-fig.update_layout(xaxis_type="linear", yaxis_type="log")
+fig.update_layout(xaxis_type="linear", yaxis_type="linear")
 
 # Überschrift hinzufügen
 fig.update_layout(
@@ -698,12 +898,19 @@ fig.update_layout(
 fig.show()
 
 
+# Vintage:
+# - min = 10 Tage 
+# - max = 299 Tage 
+# 
+# - Auffällig ist hier, dass kein Kunde kürzer als 10 Tage und nicht länger als 299 Tage in einer Beziehung zu dem Unternehmen steht
+# - Des Weiteren fällt auf, dass die Verteilung insgesamt normalverteilt ist
+
 # ## Violin Plots
 # 
 # ### Customer Age - Sales Lead
 # 
 
-# In[20]:
+# In[19]:
 
 
 # Hier müssen wir mal gucken  - ob es ok ist, dass wir die NaN's auf 0 gesetzt haben
@@ -729,7 +936,7 @@ fig.show()
 # ### Annual_Premium
 # 
 
-# In[21]:
+# In[20]:
 
 
 fig = go.Figure()
@@ -752,7 +959,7 @@ fig.show()
 # ### Vintage
 # 
 
-# In[22]:
+# In[21]:
 
 
 fig = go.Figure()
@@ -773,17 +980,12 @@ fig.show()
 
 
 # ## Korrelation
-# 
-# -   Es wird ersichtlich, dass die Variable `annual_premium` und `age` die größte positive Korrelation mit 6,7% aufweisen.
-# -   `policy_channel` und `age` weisen eine negative Korrelation von 57% auf.
-# -   Des Weiteren weisen die restlichen Variablen keine nennenswerten Korrelationen auf.
-# 
 
-# In[23]:
+# In[22]:
 
 
 # Create the correlation matrix
-corr = df.corr()
+corr = df.corr(method='pearson')
 
 # Generate a mask for the upper triangle; True = do NOT show
 mask = np.zeros_like(corr, dtype=bool)
@@ -810,6 +1012,58 @@ sns.heatmap(
     cbar_kws={"shrink": .5}
 )
 
+
+# -   In dem Plot werden lediglich die Variablen angezeigt, die keine Missing Values enthalten 
+# -   Es wird ersichtlich, dass die Variable `annual_premium` und `age` die größte positive Korrelation mit 6,7% aufweisen.
+# -   `policy_channel` und `age` weisen eine negative Korrelation von 57% auf.
+# -   Die restlichen Variablen weisen keine nennenswerten linearen Abhängigkeiten auf.
+# 
+
+# In[23]:
+
+
+# Create the correlation matrix
+corr = df.corr(method='spearman')
+
+# Generate a mask for the upper triangle; True = do NOT show
+mask = np.zeros_like(corr, dtype=bool)
+mask[np.triu_indices_from(mask)] = True
+
+# Set up the matplotlib figure
+f, ax = plt.subplots(figsize=(11, 9))
+
+# Generate a custom diverging colormap
+cmap = sns.color_palette("crest", as_cmap=True)
+
+# Draw the heatmap with the mask and correct aspect ratio
+sns.heatmap(
+    corr,          # The data to plot
+    mask=mask,     # Mask some cells
+    cmap=cmap,     # What colors to plot the heatmap as
+    annot=True,    # Should the values be plotted in the cells?
+    vmax=.3,       # The maximum value of the legend. All higher vals will be same color
+    vmin=-.3,      # The minimum value of the legend. All lower vals will be same color
+    center=0,      # The center value of the legend. With divergent cmap, where white is
+    square=True,   # Force cells to be square
+    linewidths=.5,  # Width of lines that divide cells
+    # Extra kwargs for the legend; in this case, shrink by 50%
+    cbar_kws={"shrink": .5}
+)
+
+
+# Unterschied Pearson und Spearman:
+# 
+# - Die Korrelationskoeffizienten nach `Pearson` und `Spearman` können Werte zwischen −1 und +1 annehmen. Wenn der Korrelationskoeffizient nach Pearson +1 ist, gilt: Wenn eine Variable steigt, dann steigt die andere Variable um einen einheitlichen Betrag. Diese Beziehung bildet eine perfekte Linie. Der Korrelationseffizient nach Spearman ist in diesem Fall ebenfalls +1. 
+# 
+# - Wenn die Beziehung so geartet ist, dass eine Variable ansteigt, während die andere Variable ansteigt, der Betrag jedoch nicht einheitlich ist, ist der `Pearson-Korrelationskoeffizient` positiv, jedoch kleiner als +1. Der `Spearman-Koeffizient` ist in diesem Fall immer noch gleich +1.
+# 
+# 
+# Entscheidung: 
+# - Der Unterschied der beiden Berechnungsmethoden wird für uns dann interessant, wenn wir uns nicht nur dafür interessieren, ob die Variablen monotone Zusammenhänge aufweisen.
+# - Wenn uns die linearen Abhängigkeiten interessieren, dann entscheiden wir uns für Pearson. 
+# - Wenn wir lediglich wissen möchten, ob es monotone Beziehungen zwischen den Variablen gibt, dann entscheiden wir uns für Spearman.
+# 
+# => Da wir uns für die linearen Abhängigkeiten interessieren entscheiden wir uns für Pearson!
 
 # # Missing Values
 # 
@@ -867,7 +1121,7 @@ fig.update_layout(
     ),
     yaxis2=dict(
         showgrid=False,
-        showline=True,
+        showline=False,
         showticklabels=False,
         linecolor='rgba(102, 102, 102, 0.8)',
         linewidth=2,
@@ -886,7 +1140,6 @@ fig.update_layout(
         showticklabels=True,
         showgrid=True,
         domain=[0.47, 1],
-        side='top',
         dtick=2000,
     ),
     legend=dict(x=0.029, y=1.038, font_size=10),
@@ -900,18 +1153,16 @@ annotations = []
 y_s = np.round(missing_values['count'], decimals=2)
 y_nw = np.rint(y_count_mv['count'])
 
-# Adding labels
+# Label hinzufügen
 for ydn, yd, xd in zip(y_nw, y_s, x):
-    # labeling the scatter savings
     annotations.append(dict(xref='x2', yref='y2',
-                            y=xd, x=ydn+500,
+                            y=xd, x=ydn + 500 if ydn == max(y_nw) else ydn -500, # Verschieben der Zahlen im Liniendiagramm zu besseren Darstellung
                             text='{:,}'.format(ydn),
                             font=dict(family='Arial', size=12,
                                       color='rgb(0, 68, 27)'),
                             showarrow=False))
-    # labeling the bar net worth
     annotations.append(dict(xref='x1', yref='y1',
-                            y=xd, x=yd + 0.15,
+                            y=xd, x=yd + 0.25,
                             text=str(yd) + '%',
                             font=dict(family='Arial', size=12,
                                       color='rgb(18, 63, 90)'),
@@ -922,27 +1173,14 @@ fig.update_layout(annotations=annotations)
 fig.show()
 
 
+# - Die höchste Anzahl an Missing Values befinden sich mit 2,86% (10.892 Werte) in der Variable Age 
+# - In der Variable Gender sind insgesamt 0,28% (1051 Stk) der Werte Missing Values 
+# - In den Varialben vintage, vehicle_damage, vehicle_age, previously_insured und driving_license fehlen jeweils 0,01% (51 Stk) der Werte
+
 # Wie viele Werte sind insgesamt Missing Values in dem Datensatz
 # 
 
 # In[25]:
-
-
-# get the number of missing data points per column
-missing_values_count = df.isnull().sum()
-
-# how many total missing values do we have?
-total_cells = np.product(df.shape)
-total_missing = missing_values_count.sum()
-
-# percent of data that is missing
-total_percentage_missing = (total_missing/total_cells) * 100 * 100
-print(f"{round(total_percentage_missing,2)} %")
-
-
-# 
-
-# In[26]:
 
 
 def missing_values_table(df):
@@ -975,4 +1213,11 @@ def missing_values_table(df):
 
 train_missing = missing_values_table(df)
 train_missing
+
+
+# In[26]:
+
+
+# Prozentuale Anzahl an Missing Values im gesamten Datensatz
+np.round(train_missing['% of Total Values'].sum(),2)
 

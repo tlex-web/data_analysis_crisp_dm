@@ -1,57 +1,66 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # Modelling
+
 # In[1]:
 
 
-from helpers.helper_functions import read_and_set_df, pd, np, msno, go, plt, sns, px, tf
-
-
-# In[2]:
-
-
-X_train = pd.read_csv('data/x_train_clean.csv', sep='$', decimal=".", engine='python') 
-y_train = pd.read_csv('data/y_train_clean.csv', sep='$', decimal=".", engine='python')   
-X_test = pd.read_csv('data/x_test_clean.csv', sep='$', decimal=".", engine='python') 
-y_test = pd.read_csv('data/y_test_clean.csv', sep='$', decimal=".", engine='python') 
-
-del X_train['Unnamed: 0']
-del y_train['Unnamed: 0']
-del X_test['Unnamed: 0']
-del y_test['Unnamed: 0']
-len(X_train), len(y_train), len(X_test), len(y_test)
-
-
-# In[3]:
-
-
-y_train['response'].unique()
-
-
-# In[4]:
-
-
-# Pakete für den Random Forest
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import precision_recall_curve, make_scorer, confusion_matrix
-from sklearn.metrics import precision_score, recall_score
-from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import precision_recall_curve, roc_curve, roc_auc_score, confusion_matrix, make_scorer, accuracy_score
 from sklearn.metrics import auc
-from sklearn.metrics import make_scorer
-from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.metrics import roc_curve, roc_auc_score      #, cumulative
+
 import json
 
 import kds
 
 from sklearn.model_selection import cross_val_score
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials , space_eval
-from sklearn.neighbors import KNeighborsClassifier 
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.svm import SVC
+
+import tensorflow 
+from keras.models import Sequential
+from keras.layers import Dense, BatchNormalization, Dropout
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Adadelta, Adagrad, Adamax, Nadam, Ftrl
+
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.wrappers.scikit_learn import KerasClassifier
+from math import floor
+from sklearn.metrics import make_scorer, accuracy_score
+from bayes_opt import BayesianOptimization
+from sklearn.model_selection import StratifiedKFold
+from keras.layers import LeakyReLU
+LeakyReLU = LeakyReLU(alpha=0.1)
+import warnings
+warnings.filterwarnings('ignore')
+
+
+# In[2]:
+
+
+# Exportierten Datensätze der Data Preparation einlesen
+X_train = pd.read_csv('../data/x_train_clean.csv', sep='$', decimal=".", engine='python') 
+y_train = pd.read_csv('../data/y_train_clean.csv', sep='$', decimal=".", engine='python')   
+X_test = pd.read_csv('../data/x_test_clean.csv', sep='$', decimal=".", engine='python') 
+y_test = pd.read_csv('../data/y_test_clean.csv', sep='$', decimal=".", engine='python') 
+
+del X_train['Unnamed: 0']
+del y_train['Unnamed: 0']
+del X_test['Unnamed: 0']
+del y_test['Unnamed: 0']
+
+
+# In[3]:
+
+
+def get_auc_pr(y_test, y_proba):
+    precision, recall, _ = precision_recall_curve(y_test, y_proba)
+    return auc(recall, precision)
 
 
 # ## Random Forest Classifier Train Set
@@ -66,89 +75,103 @@ from sklearn.svm import SVC
 # * `min_weight_frachtion`: 0
 # * `max_features`: 'auto'
 
-# In[5]:
+# In[4]:
 
-
-def get_auc_pr(y_train, y_proba):
-    precision, recall, thresholds = precision_recall_curve(y_train, y_proba)
-    return auc(recall, precision)
-
-# greater_is_better = höhere Werte sind besser - keine loss function 
-scorer_auc_pr = make_scorer(get_auc_pr, greater_is_better = True, needs_proba=True)
-scorer_acc = make_scorer(accuracy_score)
 
 def hyperopt_train_test(params):
-        clf = RandomForestClassifier(**params, n_jobs=-1)
-        cv = cross_val_score(clf, X_train, y_train['response'], scoring=scorer_acc, cv=5, n_jobs=-1).mean()
-        return cv
+    """
+    Instanz für den Random Forest Classifier erstellen 
+    Berechnung des Mittelwertes bei 5-facher Crossvalidierung auf Basis des pr_auc scorings
+    """
+    clf = RandomForestClassifier(**params, n_jobs=-1, random_state=42)
 
-space = {'n_estimators': hp.choice('n_estimators', range(250, 1501, 250)),
-         'max_depth': hp.choice('max_depth', range(1, 101, 10)),
+    kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    cv = cross_val_score(clf, X_train, y_train['response'], scoring='roc_auc', cv=kfold, n_jobs=-1).mean()
+    return cv
+
+# Hyperparamter definieren
+space = {'n_estimators': hp.choice('n_estimators', range(250, 3001, 250)),
+         'max_depth': hp.choice('max_depth', [None, 5, 10, 25, 50, 100, 200]),
          'max_features': hp.choice('max_features', (0.01, 0.05, 0.5, 'log2', 'sqrt', 'auto')),
          'min_samples_leaf': hp.choice('min_samples_leaf', (1, 3, 9, 15)),
-         'min_samples_split': hp.choice('min_samples_split', range(1,151,1)),     #(0.5, 2, 3)
-         #'max_leaf_nodes': hp.choice('max_leaf_nodes', range(2, 5)),
+         'min_samples_split': hp.choice('min_samples_split', (0.5, 2, 5, 10, 15, 100)),   
+         'max_leaf_nodes': hp.choice('max_leaf_nodes', [None, 2, 5, 10]),
          'criterion': hp.choice('criterion', ["gini", "entropy"])
         }
 
 best = 0
 def fn(params):
+    """
+    Berechnung des roc_auc durch aufrufen der Funktion `hyperopt_train_test` und durch übergeben des Parameters `params`
+    Extrahieren des höchsten roc_auc 
+    """
     global best
-    pr_auc = hyperopt_train_test(params)
-    if pr_auc > best:
-        best = pr_auc
+    roc_auc = hyperopt_train_test(params)
+    if roc_auc > best:
+        best = roc_auc
     print(f'best: {best}\nparams: {params}')
-    # We aim to maximize pr_auc, therefore we return it as a negative value
-    return {'loss': -pr_auc, 'status': STATUS_OK}
+    # Da wir den roc_auc maxmieren und in der Funktion `fmin` minimieren, müssen wir diesen als negativen Wert zurückgeben
+    return {'loss': -roc_auc, 'status': STATUS_OK}
 
+# Zum speichern der einzelen Ergebnisse der Funktion `fn` instanzieren wir das Klassenobjekt `trials`
 trials = Trials()
-# fmin = fine tuning the model and then print the best lost with its hyperparameters values
+
+# Die Funktion `fmin` erstellt mittels des TPE-EI Algorithmus die besten Hyperparamterkombinationen und übergibt diese in der 
+# Funktion `fn`. Insgesamt testen wir 50 mögliche Kombinationen an Hyperparamtern. Die Ergebnisse werden im Objekt `trials` gespeichert. 
+# Das Ergebnis der Minimierung ist ein dictionary mit den besten Hyperparamtern, also die Hyperparameter, bei denen der
+# roc_auc score am Höchsten war
 best = fmin(fn,
             space,
             algo=tpe.suggest,
             max_evals=20, 
-            trials=trials)
-            
+            trials=trials
+            )
+
 print('best:', best)
 
 
-# In[6]:
+# In[43]:
 
 
-from hyperopt import fmin, tpe, hp, STATUS_OK, Trials, space_eval
-# Show best model
+# Anhand der Indices der Hyperparamter in der Variable `best` filtert die Funktion `space_eval` die entsprechenden Hyperparamter aus `space`
 params_random_forest_opt = space_eval(space, best)
+
+# Speichern der Hyperparamter als JSON Datei
+with open('../data/random_forest_hyper_params.json', mode='x') as f:
+    json.dump(params_random_forest_opt, fp=f)
+
 params_random_forest_opt
 
 
-# In[7]:
+# Trainieren des finalen Modelles
+
+# In[44]:
 
 
-# training final classifier
 clf = RandomForestClassifier(**params_random_forest_opt, n_jobs=-1)
 
 fit_rf = clf.fit(X_train, y_train['response'])
-y_pred_proba = clf.predict_proba(X_test)[:,1]
-y_pred = clf.predict(X_test)
+
+# Wahrscheinlichkeit für die Vorhersage der positiven Klasse der Zielvariable
+y_pred_proba = fit_rf.predict_proba(X_test)[:,1]
+# Vorhersagen der Zielvariable 
+y_pred = fit_rf.predict(X_test)
 
 print(y_pred)
 print(y_pred_proba)
 
 
-# In[8]:
+# Funktion zur Berechnung des pr_auc
+
+# In[45]:
 
 
-# Funktion für den pr_auc schreiben
-def get_auc_pr(y_test, y_proba):
-    precision, recall, thresholds = precision_recall_curve(y_test, y_proba)
-    return auc(recall, precision)
-
-# pr_auc ausgeben lassen
 pr_auc_rf = get_auc_pr(y_test[['response']], y_pred)
-print(pr_auc_rf)
+pr_auc_rf
 
 
-# # Evaluation 
+# ### Evaluation 
 
 # #### Entscheidung für ein Gütemaß
 # 
@@ -159,33 +182,37 @@ print(pr_auc_rf)
 # 
 # Darum werden wir als maßgebliches Gütemaß den pr_auc in diesem Anwendungsfall verwenden.
 
-# #### Visuelle Darstellung der Confusion Matrix
+# #### Visuelle Darstellung der Kunfusionsmatrix
 
-# In[9]:
+# In[46]:
 
 
-# Konfusionsmatrix
+# Konfusionsmatrix erstellen
 cf_matrix = confusion_matrix(y_test[['response']], y_pred)
 
+# Klassennamen definieren
 group_names = ['True Neg','False Pos','False Neg','True Pos']
 
+# Ausprägungen je Klasse zählen
 group_counts = ["{0:0.0f}".format(value) for value in
                 cf_matrix.flatten()]
 
+# relativen Anteile der Klasse bestimmen
 group_percentages = ["{0:.2%}".format(value) for value in cf_matrix.flatten()/np.sum(cf_matrix)]
 
-
+# Die obigen Informationen zusammenführen 
 labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
           zip(group_names,group_counts,group_percentages)]
 
 labels = np.asarray(labels).reshape(2,2)
 
+# Plot erstellen
 sns.heatmap(cf_matrix, annot=labels, fmt='', cmap='Blues')
 
 
 # #### Feature Importance 
 
-# In[10]:
+# In[47]:
 
 
 # Feature Importance für den Trainingsdatensatz plotten
@@ -209,13 +236,16 @@ fig.show()
 
 # #### ROC Kurve
 
-# In[11]:
+# In[48]:
 
 
+# False Positive, True Postive Rate bestimmen
 fpr, tpr, _ = roc_curve(y_test['response'], y_pred_proba)
+
+# Fläche unter der False Positive, True Postive Rate berechnen
 auc_score = roc_auc_score(y_test['response'], y_pred_proba)
 
-
+# Area Plot erstellen
 fig = px.area(
     x=fpr, y=tpr,
     title=f'ROC-Curve (AUC={auc(fpr, tpr):.4f})',
@@ -223,16 +253,17 @@ fig = px.area(
     width=700, height=500
 )
 
-
+# Linie des Zufallsmodelles einfügen
 fig.add_shape(
     type='line', line=dict(dash='dash'),
     x0=0, x1=1, y0=0, y1=1
 )
 
-
+# Skalierung anpassen
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 fig.update_xaxes(constrain='domain')
 
+# Plot anzeigen
 fig.show()
 
 
@@ -242,33 +273,40 @@ fig.show()
 # 
 # Die `Precision` setzt jene Zahl ins Verhältnis zur Zahl der insgesamt gefundenen Dokumente, sie gibt an, wieviele der gefundenen relevant sind. Grob gesprochen: Recall – wieviel habe ich gefunden, wieviel Substanz hat die Datenbank ; Precision – wieviel Unbrauchbares habe ich gefunden, wie genau kann man in der Datenbank suchen?
 
-# In[12]:
+# In[49]:
 
 
-# Muss noch angepasst werden 
-tpr, fpr, thresholds = roc_curve(y_test['response'], y_pred_proba)
+# Precision, Recall und Thresholds berechnen
 precision_recall_threshold = pd.DataFrame(precision_recall_curve(y_test[['response']], y_pred_proba)).transpose()
+
+# Spaltennamen anpassen
 precision_recall_threshold.columns = ['Precision', 'Recall', 'Threshold']
 
+# Area Plot erstellen
 fig = px.area(
     x=precision_recall_threshold['Recall'], y=precision_recall_threshold['Precision'],
     title=f'Precision-Recall Curve (AUC={pr_auc_rf:.4f})',
     labels=dict(x='Recall', y='Precision'),
     width=700, height=500
 )
+
+# Linie des Zufallsmodells einfügen
 fig.add_shape(
     type='line', line=dict(dash='dash'),
     x0=0, x1=1, y0=1, y1=0
 )
+
+# Skalierung anpassen
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 fig.update_xaxes(constrain='domain')
 
+# Plot anzeigen
 fig.show()
 
 
 # #### Precision-Recall-Threshold Curve
 
-# In[13]:
+# In[50]:
 
 
 # Data Frame erzeugen, der die precision, recall, threshold werte enthält 
@@ -325,7 +363,7 @@ fig.show()
 
 # #### Sensitivity-Specificity-Threshold Curve
 
-# In[14]:
+# In[51]:
 
 
 fpr, tpr, thresholds =roc_curve(y_test[['response']], y_pred_proba)
@@ -384,221 +422,153 @@ fig.show()
 
 # #### Cumulative Gain Chart
 
-# In[15]:
-
-
-kds.metrics.plot_cumulative_gain(np.array(y_test['response']), y_pred_proba)
-
-
-# In[16]:
+# In[52]:
 
 
 kds.metrics.report(np.array(y_test['response']), y_pred_proba,plot_style='ggplot')
 
 
-# Lift Curve Plot
+# - Lift Plot: Unser Modell sagt bis zur einer Grunggesamtheit von 100% (10tes Dezil) die positive Klasse besser vorher, als ein Zufallsmodell.
+# - Cumulative Gain Plot: Wenn wir ~ 70% der von unserem Modell positiv vorhergesagten Klasse erreicht habe, habe ich bereits fast 100% der positiven Klasse erreicht. 
 
-# In[17]:
+# ## Gradiant Boosting Classifier
 
+# Default Values for Gradient Boosting Classifier:
+# 
+# * `n_estimators`: 100
+# * `loss`: 'deviance'
+# * `learning_rate`: 0.1
+# * `subsample`: 1
+# * `criterion`= "friedman_mse"
+# * `min_samples_split`: 2
+# * `min_samples_leaf`: 1
+# * `min_weight_frachtion`: 0
+# * `max_features`: None
+# * `max_depth`: 3
 
-# fig = go.Figure()
-# fig.add_trace(go.Scatter(x=list(range(10,100+10,10)), y=np.repeat(1,10),
-#                     mode='lines+markers',
-#                     name='lines+markers'))
-# fig.add_trace(go.Scatter(x=list(range(10,100+10,10)), y=lift.Lift,
-#                     mode='lines+markers',
-#                     name='lines+markers'))
-
-# fig.update_xaxes(
-#         title_text = "% of Data Set",
-# )
-
-# fig.update_yaxes(
-#         title_text = "Lift",
-#         )
-# fig.update_layout(title='Lift Charts',)
-
-# fig.show()
+# In[15]:
 
 
-# Gain Chart
+def hyperopt_boosted_tree_train_test(params):
+    """
+    Instanz für den Gradient Boosting Classifier erstellen 
+    Berechnung des Mittelwertes bei 5-facher Crossvalidierung auf Basis des roc_auc scorings
+    """
+    gbc = GradientBoostingClassifier(**params, random_state=42)
 
-# In[18]:
+    kfold = StratifiedKFold(n_splits=5)
 
-
-# gain = lift.Gain.tolist()
-# gain.insert(0,0)
-# fig = go.Figure()
-# fig.add_trace(go.Scatter(x=list(range(0,100+10,10)), y=list(range(0,100+10,10)),
-#                     mode='lines+markers',
-#                     name='lines+markers'))
-# fig.add_trace(go.Scatter(x=list(range(0,100+10,10)), y=gain,
-#                     mode='lines+markers',
-#                     name='lines+markers'))
-
-# fig.update_xaxes(
-#         title_text = "% of Data Set",
-# )
-
-# fig.update_yaxes(
-#         title_text = "% of Gain",
-#         )
-# fig.update_layout(title='Gain Charts',)
-
-# fig.show()
-
-
-# #### Modell vergleiche anhand eines Gütemaßes in einer Tabelle 
-
-# In[19]:
-
-
-# Modell Evaluation
-# Hier können wir dann alle Modell anhand von verschiedenen Gütemaßen in einer Tabelle vergleichen 
-models = pd.DataFrame({
-    'Model': ['Random Forest'],
-    'Score': [pr_auc_rf]
-})
-
-# Die cmpa wird erst bei mehreren Zeilen richtig angezeigt
-models.sort_values(by='Score', ascending=False).style.background_gradient(cmap='Greens',subset = ['Score'])   
-
-
-# # Gradiant Boosting Tree
-
-# In[20]:
-
-
-def hyperopt_boostedtree_train_test(params):
-        clb = GradientBoostingClassifier(**params)
-        cv = cross_val_score(clb, X_train, y_train['response'], scoring=scorer_acc, cv=5, n_jobs=-1).mean()
-        return cv
+    cv = cross_val_score(gbc, X_train, y_train['response'], scoring='roc_auc', cv=kfold, n_jobs=-1).mean()
+    return cv
     
+# Hyperparamter definieren
 space_bt = {'loss': hp.choice('loss', ['deviance', 'exponential']),
-            'learning_rate': hp.choice('learing_rate', (0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2)),
-            'min_samples_split': hp.choice('min_samples_split', (0.1, 0.5, 12)),
-            'min_samples_leaf': hp.choice('min_samples_leaf', (0.1, 0.5, 12)),
-            'n_estimators': hp.choice('n_estimators', range(1, 20)),
-            'max_depth': hp.choice('max_depth', range(1, 10, 2)),
-            'max_features': hp.choice('max_features', ('log2', 'sqrt', 'auto')),
+            'learning_rate': hp.choice('learing_rate', (0.01, 0.05, 0.1, 0.2, 0.25, 0.5, 1)),
+            'min_samples_split': hp.choice('min_samples_split', (0.1, 0.5, 2, 5, 10)),
+            'min_samples_leaf': hp.choice('min_samples_leaf', (0.1, 0.5, 1, 2, 5, 12)),
             'criterion': hp.choice('criterion', ('friedman_mse', 'squared_error')),
-            'subsample': hp.choice('subsample', (0.5, 0.685, 0.85, 0.9, 0.951)),
-            'n_estimators': hp.choice('n_estimators', range(100, 1501, 250))
+            'max_features': hp.choice('max_features', ('log2', 'sqrt', 'auto')),
+            'subsample': hp.choice('subsample', (0.5, 0.65, 0.85, 0.9, 1)),
+            'n_estimators': hp.choice('n_estimators', range(250, 3001, 250))
             }
 
 best_bt = 0
 
 def fn(params):
-    global best_bt
-    pr_auc = hyperopt_boostedtree_train_test(params)
-    if pr_auc > best_bt:
-        best_bt = pr_auc
-    print('new best:', best_bt, params)
-    # We aim to maximize pr_auc, therefore we return it as a negativve value
-    return {'loss': -pr_auc, 'status': STATUS_OK}
+    """
+    Berechnung des roc_auc durch aufrufen der Funktion `hyperopt_train_test` und durch übergeben des Parameters `params`
+    Extrahieren des höchsten roc_auc 
 
+    """
+    global best_bt
+    roc_auc = hyperopt_boosted_tree_train_test(params)
+    if roc_auc > best_bt:
+        best_bt = roc_auc
+    print('new best:', best_bt, params)
+    # Da wir den roc_auc maxmieren und in der Funktion `fmin` minimieren, müssen wir diesen als negativen Wert zurückgeben
+    return {'loss': -roc_auc, 'status': STATUS_OK}
+
+# Zum speichern der einzelen Ergebnisse der Funktion `fn` instanzieren wir das Klassenobjekt `trials`
 trials = Trials()
-# fmin = fine tuning the model and then print the best lost with its hyperparameters values
+
+# Die Funktion `fmin` erstellt mittels des TPE-EI Algorithmus die besten Hyperparamterkombinationen und übergibt diese in der 
+# Funktion `fn`. Insgesamt testen wir 50 mögliche Kombinationen an Hyperparamtern. Die Ergebnisse werden im Objekt `trials` gespeichert. 
+# Das Ergebnis der Minimierung ist ein dictionary mit den besten Hyperparamtern, also die Hyperparameter, bei denen der
+# roc_auc score am Höchsten war
 best_bt = fmin(fn,
             space_bt,
             algo=tpe.suggest,
-            max_evals=20, trials=trials)
+            max_evals=20, 
+            trials=trials
+            )
             
 print('best_bt:', best_bt)
 
 
-# In[21]:
+# In[16]:
 
 
-# Show best model
+# Anhand der Indices der Hyperparamter in der Variable `best_bt` filtert die Funktion `space_eval` die entsprechenden Hyperparamter aus `space_bt`
 params_boosted_tree_opt = space_eval(space_bt, best_bt)
+
+# Speichern der Hyperparamter als JSON Datei
+with open('../data/gradient_boosting_classifier_hyper_params.json', mode='x') as f:
+    json.dump(params_boosted_tree_opt, fp=f)
+
 params_boosted_tree_opt
 
 
-# In[22]:
+# Trainieren des finalen Modelles
+
+# In[17]:
 
 
-rand_for = RandomForestClassifier(n_jobs=-1, random_state=41)
+gbc = GradientBoostingClassifier(**params_boosted_tree_opt, random_state=42)
 
-rand_for.fit(X_train, y_train)
-
-res = rand_for.predict(X_test)
-resa = rand_for.predict_proba(X_test)[:,1]
-
-confusion_matrix(y_test, res)
-fpr, tpr, _ = roc_curve(y_test['response'], resa)
-auc_score = roc_auc_score(y_test['response'], resa)
-
-
-fig = px.area(
-    x=fpr, y=tpr,
-    title=f'ROC-Curve (AUC={auc(fpr, tpr):.4f})',
-    labels=dict(x='False Positive Rate', y='True Positive Rate'),
-    width=700, height=500
-)
-
-
-fig.add_shape(
-    type='line', line=dict(dash='dash'),
-    x0=0, x1=1, y0=0, y1=1
-)
-
-
-fig.update_yaxes(scaleanchor="x", scaleratio=1)
-fig.update_xaxes(constrain='domain')
-
-fig.show()
-
-
-# In[23]:
-
-
-# training final classifier
-gb = GradientBoostingClassifier(**params_boosted_tree_opt)
-
-fit_bt = gb.fit(X_train, y_train['response'])
+fit_bt = gbc.fit(X_train, y_train['response'])
 y_pred_proba_bt = fit_bt.predict_proba(X_test)[:,1]
 y_pred_bt = fit_bt.predict(X_test)
 
 print(y_pred_bt)
 print(y_pred_proba_bt)
 
-# training final classifier
-clf = RandomForestClassifier(**params_random_forest_opt, n_jobs=-1)
 
-fit_rf = clf.fit(X_train, y_train['response'])
-y_pred_proba = clf.predict_proba(X_test)[:,1]
-y_pred = clf.predict(X_test)
-
-print(y_pred)
-print(y_pred_proba)
+# In[26]:
 
 
-# #### Evaluation Boosted Tree
-
-# In[24]:
-
-
-# Konfusionsmatrix
-cf_matrix_bt = confusion_matrix(y_test[['response']], y_pred_bt)
-
-group_names_bt = ['True Neg','False Pos','False Neg','True Pos']
-
-group_counts_bt = ["{0:0.0f}".format(value) for value in
-                cf_matrix_bt.flatten()]
-
-group_percentages_bt = ["{0:.2%}".format(value) for value in cf_matrix_bt.flatten()/np.sum(cf_matrix_bt)]
+pr_auc_bt = get_auc_pr(y_test[['response']], y_pred_bt)
+pr_auc_bt
 
 
-labels_bt = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
-          zip(group_names_bt,group_counts_bt,group_percentages_bt)]
+# #### Evaluation Gradient Boosting Classifier
 
-labels_bt = np.asarray(labels_bt).reshape(2,2)
-
-sns.heatmap(cf_matrix_bt, annot=labels_bt, fmt='', cmap='Blues')
+# In[19]:
 
 
-# In[25]:
+# Konfusionsmatrix erstellen
+cf_matrix = confusion_matrix(y_test[['response']], y_pred_bt)
+
+# Klassennamen definieren
+group_names = ['True Neg','False Pos','False Neg','True Pos']
+
+# Ausprägungen je Klasse zählen
+group_counts = ["{0:0.0f}".format(value) for value in
+                cf_matrix.flatten()]
+
+# relativen Anteile der Klasse bestimmen
+group_percentages = ["{0:.2%}".format(value) for value in cf_matrix.flatten()/np.sum(cf_matrix)]
+
+# Die obigen Informationen zusammenführen 
+labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
+          zip(group_names,group_counts,group_percentages)]
+
+labels = np.asarray(labels).reshape(2,2)
+
+# Plot erstellen
+sns.heatmap(cf_matrix, annot=labels, fmt='', cmap='Blues')
+
+
+# In[20]:
 
 
 # Feature Importance für den Trainingsdatensatz plotten
@@ -621,13 +591,16 @@ fig.show()
 
 # #### ROC-Curve
 
-# In[26]:
+# In[21]:
 
 
+# False Positive, True Postive Rate bestimmen
 fpr, tpr, _ = roc_curve(y_test['response'], y_pred_proba_bt)
-auc_score_bt = roc_auc_score(y_test['response'], y_pred_proba_bt)
 
+# Fläche unter der False Positive, True Postive Rate berechnen
+auc_score = roc_auc_score(y_test['response'], y_pred_proba_bt)
 
+# Plot Design erstllen
 fig = px.area(
     x=fpr, y=tpr,
     title=f'ROC-Curve (AUC={auc(fpr, tpr):.4f})',
@@ -635,50 +608,65 @@ fig = px.area(
     width=700, height=500
 )
 
-
+# Linie des Zufallsmodelles einfügen
 fig.add_shape(
     type='line', line=dict(dash='dash'),
     x0=0, x1=1, y0=0, y1=1
 )
 
-
+# Skalierung anpassen
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 fig.update_xaxes(constrain='domain')
 
+# Plot erstellen
 fig.show()
 
 
 # #### Precision-Recall Curve
 
-# In[27]:
+# In[22]:
 
 
-# Muss noch angepasst werden 
-tpr, fpr, thresholds = roc_curve(y_test['response'], y_pred_proba_bt)
-# pr_auc ausgeben lassen
-pr_auc_bt = get_auc_pr(y_test[['response']], y_pred_bt)
-precision_recall_threshold_bt = pd.DataFrame(precision_recall_curve(y_test[['response']], y_pred_proba_bt)).transpose()
-precision_recall_threshold_bt.columns = ['Precision', 'Recall', 'Threshold']
+# Precision, Recall und Thresholds berechnen
+precision_recall_threshold = pd.DataFrame(precision_recall_curve(y_test[['response']], y_pred_proba_bt)).transpose()
 
+# Spaltennamen anpassen
+precision_recall_threshold.columns = ['Precision', 'Recall', 'Threshold']
+
+# Area Plot erstellen
 fig = px.area(
-    x=precision_recall_threshold_bt['Recall'], y=precision_recall_threshold_bt['Precision'],
+    x=precision_recall_threshold['Recall'], y=precision_recall_threshold['Precision'],
     title=f'Precision-Recall Curve (AUC={pr_auc_bt:.4f})',
     labels=dict(x='Recall', y='Precision'),
     width=700, height=500
 )
+
+# Linie des Zufallsmodells einfügen
 fig.add_shape(
     type='line', line=dict(dash='dash'),
     x0=0, x1=1, y0=1, y1=0
 )
+
+# Skalierung anpassen
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 fig.update_xaxes(constrain='domain')
 
+# Plot anzeigen
 fig.show()
 
 
+# In[23]:
+
+
+kds.metrics.report(np.array(y_test['response']), y_pred_proba_bt, plot_style='ggplot')
+
+
+# - Lift Plot: Unser Modell sagt bis zur einer Grunggesamtheit von 100% (10tes Dezil) die positive Klasse besser vorher, als ein Zufallsmodell.
+# - Cumulative Gain Plot: Wenn wir ~ 70% der von unserem Modell positiv vorhergesagten Klasse erreicht habe, habe ich bereits fast 100% der positiven Klasse erreicht. 
+
 # #### Precision-Recall-Threshold Curve
 
-# In[28]:
+# In[24]:
 
 
 # Data Frame erzeugen, der die precision, recall, threshold werte enthält 
@@ -735,7 +723,7 @@ fig.show()
 
 # #### Sensitivity-Specificity-Threshold Curve
 
-# In[29]:
+# In[25]:
 
 
 fpr, tpr, thresholds =roc_curve(y_test[['response']], y_pred_proba_bt)
@@ -792,50 +780,26 @@ fig.update_yaxes(title_text='Sensitivity / Specificity')
 fig.show()
 
 
-# # Neuronal Network 
+# ## Neuronal Network 
 
-# In[30]:
-
-
-import tensorflow 
-from keras.models import Sequential
-from keras.layers import Dense, BatchNormalization, Dropout
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Adadelta, Adagrad, Adamax, Nadam, Ftrl
-
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.wrappers.scikit_learn import KerasClassifier
-from math import floor
-from sklearn.metrics import make_scorer, accuracy_score
-from bayes_opt import BayesianOptimization
-from sklearn.model_selection import StratifiedKFold
-from keras.layers import LeakyReLU
-LeakyReLU = LeakyReLU(alpha=0.1)
-import warnings
-warnings.filterwarnings('ignore')
+# In[29]:
 
 
-# In[31]:
-
-
-# Make scorer accuracy
-score_acc = make_scorer(accuracy_score)
-
-
-# The following code creates the objective function containing the Neural Network model. The function will return returns the score of the cross-validation.
-
-# In[32]:
-
-
-# Create function
 def nn_cl_bo(neurons, activation, optimizer, learning_rate,  batch_size, epochs ):
+    """
+    Funktion zur Bestimmung der Hyperparamter des Neuronalen Netzes.
+    Die Hyperparamter werden auf Basis des zufällig bestimmten Index ausgewählt und auf einem Standardmodell trainiert.
+    Mittels der Crossvalidierung geben wir das beste Ergebnis des ersten Tunings zurück
+    """
     optimizerL = ['SGD', 'Adam', 'RMSprop', 'Adadelta', 'Adagrad', 'Adamax', 'Nadam', 'Ftrl','SGD']
-    optimizerD= {'Adam':Adam(lr=learning_rate), 'SGD':SGD(lr=learning_rate),
+    optimizerD = {'Adam':Adam(lr=learning_rate), 'SGD':SGD(lr=learning_rate),
                  'RMSprop':RMSprop(lr=learning_rate), 'Adadelta':Adadelta(lr=learning_rate),
                  'Adagrad':Adagrad(lr=learning_rate), 'Adamax':Adamax(lr=learning_rate),
                  'Nadam':Nadam(lr=learning_rate), 'Ftrl':Ftrl(lr=learning_rate)}
     activationL = ['relu', 'sigmoid', 'softplus', 'softsign', 'tanh', 'selu',
                    'elu', 'exponential', LeakyReLU,'relu']
     neurons = round(neurons)
+    optimizer = optimizerL[round(optimizer)]
     activation = activationL[round(activation)]
     batch_size = round(batch_size)
     epochs = round(epochs)
@@ -843,7 +807,7 @@ def nn_cl_bo(neurons, activation, optimizer, learning_rate,  batch_size, epochs 
     def nn_cl_fun():
         opt = Adam(lr = learning_rate)
         nn = Sequential()
-        nn.add(Dense(neurons, input_dim=10, activation=activation))
+        nn.add(Dense(neurons, input_dim=16, activation=activation))
         nn.add(Dense(neurons, activation=activation))
         nn.add(Dense(1, activation='sigmoid'))
         nn.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -853,16 +817,14 @@ def nn_cl_bo(neurons, activation, optimizer, learning_rate,  batch_size, epochs 
     nn = KerasClassifier(build_fn=nn_cl_fun, epochs=epochs, batch_size=batch_size,
                          verbose=0)
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=123)
-    score = cross_val_score(nn, X_train, y_train['response'], scoring=score_acc, cv=kfold, fit_params={'callbacks':[es]}).mean()
+    score = cross_val_score(nn, X_train, y_train['response'], scoring=make_scorer(accuracy_score), cv=kfold, fit_params={'callbacks':[es]}).mean()
     return score
 
 
-# The code below sets the range of hyperparameters and run the Bayesian Optimization
-
-# In[33]:
+# In[30]:
 
 
-# Set paramaters
+# Hyperparameter definieren
 params_nn ={
     'neurons': (5, 10),
     'activation':(0, 9),
@@ -871,14 +833,17 @@ params_nn ={
     'batch_size':(20, 50),
     'epochs':(10, 50)
 }
-# Run Bayesian Optimization
+
+# Bayesian Optimierung durchführen
 nn_bo = BayesianOptimization(nn_cl_bo, params_nn, random_state=111)
+
+# Filtere nach dem höchsten target score
 nn_bo.maximize(init_points=25, n_iter=4)
 
 
 # Die besten hyperparameter ausgeben lassen 
 
-# In[34]:
+# In[31]:
 
 
 params_nn_ = nn_bo.max['params']
@@ -890,10 +855,9 @@ params_nn_
 
 # Erstellen einer Funktion zum Tunen des Modells
 
-# In[35]:
+# In[32]:
 
 
-# Create function
 def nn_cl_bo2(neurons, activation, optimizer, learning_rate, batch_size, epochs,
               layers1, layers2, normalization, dropout, dropout_rate):
     optimizerL = ['SGD', 'Adam', 'RMSprop', 'Adadelta', 'Adagrad', 'Adamax', 'Nadam', 'Ftrl','SGD']
@@ -912,7 +876,7 @@ def nn_cl_bo2(neurons, activation, optimizer, learning_rate, batch_size, epochs,
     layers2 = round(layers2)
     def nn_cl_fun():
         nn = Sequential()
-        nn.add(Dense(neurons, input_dim=10, activation=activation))
+        nn.add(Dense(neurons, activation=activation))
         if normalization > 0.5:
             nn.add(BatchNormalization())
         for i in range(layers1):
@@ -927,17 +891,17 @@ def nn_cl_bo2(neurons, activation, optimizer, learning_rate, batch_size, epochs,
     es = EarlyStopping(monitor='accuracy', mode='max', verbose=0, patience=20)
     nn = KerasClassifier(build_fn=nn_cl_fun, epochs=epochs, batch_size=batch_size, verbose=0)
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=123)
-    score = cross_val_score(nn, X_train, y_train, scoring=score_acc, cv=kfold, fit_params={'callbacks':[es]}).mean()
+    score = cross_val_score(nn, X_train, y_train['response'], scoring=make_scorer(accuracy_score), cv=kfold, fit_params={'callbacks':[es]}).mean()
     return score
 
 
 # Im Folgenden wird nun nach den optimalen Hyperparametern und Layern gesucht 
 
-# In[36]:
+# In[33]:
 
 
 params_nn2 ={
-    'neurons': (10, 100),
+    'neurons': (16, 100),
     'activation':(0, 9),
     'optimizer':(0,7),
     'learning_rate':(0.01, 1),
@@ -949,14 +913,17 @@ params_nn2 ={
     'dropout':(0,1),
     'dropout_rate':(0,0.3)
 }
-# Run Bayesian Optimization
+
+# Bayesian Optimierung durchführen
 nn_bo = BayesianOptimization(nn_cl_bo2, params_nn2, random_state=111)
+
+# Filtere nach dem höchsten target score
 nn_bo.maximize(init_points=25, n_iter=4)
 
 
 # Die besten Hyperparamter und Layer ausgeben lassen
 
-# In[37]:
+# In[34]:
 
 
 params_nn_ = nn_bo.max['params']
@@ -978,21 +945,20 @@ params_nn_['optimizer'] = optimizerD[optimizerL[round(params_nn_['optimizer'])]]
 params_nn_
 
 
-# Fit the final Model
+# Finales Model trainieren
 
-# In[38]:
+# In[35]:
 
 
-# Fitting Neural Network
 def nn_cl_fun():
     nn = Sequential()
-    nn.add(Dense(params_nn_['neurons'], input_dim=10, activation=params_nn_['activation']))
+    nn.add(Dense(params_nn_['neurons'], input_dim=16, activation=params_nn_['activation']))
     if params_nn_['normalization'] > 0.5:
         nn.add(BatchNormalization())
     for i in range(params_nn_['layers1']):
         nn.add(Dense(params_nn_['neurons'], activation=params_nn_['activation']))
     if params_nn_['dropout'] > 0.5:
-        nn.add(Dropout(params_nn_['dropout_rate'], seed=123))
+        nn.add(Dropout(params_nn_['dropout_rate'], seed=42))
     for i in range(params_nn_['layers2']):
         nn.add(Dense(params_nn_['neurons'], activation=params_nn_['activation']))
     nn.add(Dense(1, activation='sigmoid'))
@@ -1000,31 +966,45 @@ def nn_cl_fun():
     return nn
         
 es = EarlyStopping(monitor='accuracy', mode='max', verbose=0, patience=20)
-nn = KerasClassifier(build_fn=nn_cl_fun, epochs=params_nn_['epochs'], batch_size=params_nn_['batch_size'],
-                         verbose=0)
+
+nn = KerasClassifier(build_fn=nn_cl_fun, epochs=params_nn_['epochs'], batch_size=params_nn_['batch_size'],verbose=0)
+
+standart_scaler = StandardScaler()
+X_train[['annual_premium', 'vintage']] = standart_scaler.fit_transform(X_train[['annual_premium', 'vintage']])
+X_test[['annual_premium', 'vintage']] = standart_scaler.fit_transform(X_test[['annual_premium', 'vintage']])
  
 nn_final_model = nn.fit(X_train, y_train, validation_data=(X_test, y_test), verbose=1)
 
 
 # Evaluation des Modells auf dem Testdatensatz
 
-# In[39]:
+# In[36]:
 
 
 y_pred_nn = pd.DataFrame(nn.predict(X_test), columns=['pred_response_nn'])
 y_pred_nn
 
 
-# In[40]:
+# Ausgeben der Vorhersagen
+
+# In[37]:
 
 
 y_pred_nn_proba = nn.predict_proba(X_test)[:,1]
 y_pred_nn_proba
 
 
+# Berechnung des pr auc
+
+# In[38]:
+
+
+pr_auc_nn = get_auc_pr(y_test['response'], y_pred_nn_proba)
+
+
 # #### Evaluation des Neuronal Network 
 
-# In[41]:
+# In[39]:
 
 
 # Konfusionsmatrix
@@ -1046,18 +1026,18 @@ labels_bt = np.asarray(labels_bt).reshape(2,2)
 sns.heatmap(cf_matrix_bt, annot=labels_bt, fmt='', cmap='Blues')
 
 
-# #### Feature Importance
-# Hat noch nicht funktioniert
-
 # #### ROC-Curve
 
-# In[42]:
+# In[40]:
 
 
+# False Positive, True Postive Rate bestimmen
 fpr, tpr, _ = roc_curve(y_test['response'], y_pred_nn_proba)
-auc_score_nn = roc_auc_score(y_test['response'], y_pred_nn_proba)
 
+# Fläche unter der False Positive, True Postive Rate berechnen
+auc_score = roc_auc_score(y_test['response'], y_pred_nn_proba)
 
+# Plot Design erstllen
 fig = px.area(
     x=fpr, y=tpr,
     title=f'ROC-Curve (AUC={auc(fpr, tpr):.4f})',
@@ -1065,79 +1045,36 @@ fig = px.area(
     width=700, height=500
 )
 
-
+# Linie des Zufallsmodelles einfügen
 fig.add_shape(
     type='line', line=dict(dash='dash'),
     x0=0, x1=1, y0=0, y1=1
 )
 
-
+# Skalierung anpassen
 fig.update_yaxes(scaleanchor="x", scaleratio=1)
 fig.update_xaxes(constrain='domain')
 
+# Plot erstellen
 fig.show()
 
 
-# # Evaluation der Modell auf dem neuen Testdatensatz
+# ## Vergleich aller Modelle
 
-# In[43]:
+# #### Modell vergleiche anhand eines Gütemaßes in einer Tabelle 
 
-
-test_data_df = pd.read_csv('./data/test.csv', sep='[,$]' , decimal=".", engine='python')
-
-test_data_df.columns = test_data_df.columns.str.lower()
-
-test_data_df.rename(columns={
-    'id': 'id',
-    'gender': 'gender',
-    'age': 'age',
-    'driving_license': 'driving_license',
-    'region_code': 'region_code',
-    'previously_insured': 'previously_insured',
-    'vehicle_age': 'vehicle_age',
-    'vehicle__damage': 'vehicle_damage',
-    'annual__premium': 'annual_premium',
-    'policy_sales_channel': 'policy_sales_channel',
-    'vintage': 'vintage'
-},
-    inplace=True)
+# In[53]:
 
 
-index_max_age = test_data_df[test_data_df["age"] >= 100].index
-test_data_df.drop(index_max_age, inplace=True)
+# Modell Evaluation
+# Hier können wir dann alle Modell anhand von verschiedenen Gütemaßen in einer Tabelle vergleichen 
+models = pd.DataFrame({
+    'Model': ['Random Forest Classifier', 'Gradient Boosting Classifier', 'Neural Network'],
+    'Score': [pr_auc_rf, pr_auc_bt, pr_auc_nn]
+})
 
-index_min_age = test_data_df[test_data_df["age"] < 18].index
-test_data_df.drop(index_min_age, inplace=True)
-
-index_min_premium = test_data_df[test_data_df["annual_premium"] <= 0].index
-test_data_df.drop(index_min_premium, inplace=True)
-
-index_max_premium = test_data_df[test_data_df["annual_premium"] >= 150000].index
-test_data_df.drop(index_max_premium, inplace=True)
-
-def map_categorials(df):
-
-    vehicle_age_map = {
-        '< 1 Year': 0,
-        '1-2 Year': 1,
-        '> 2 Years': 2
-    }
-
-    vehicle_damage_map = {
-        'No': 0,
-        'Yes': 1
-    }
-
-    df.loc[:,'vehicle_age'] = df['vehicle_age'].map(vehicle_age_map).astype('Int64')
-    df.loc[:,'vehicle_damage'] = df['vehicle_damage'].map(vehicle_damage_map)
-
-    LE = LabelEncoder()
-    df['region_code'] = LE.fit_transform(df.loc[:,'region_code'])
-    df['gender'] = LE.fit_transform(df.loc[:, 'gender'])
-
-    return df
-
-test_data_df_label_encoded = map_categorials(test_data_df)
+# Die cmpa wird erst bei mehreren Zeilen richtig angezeigt
+models.sort_values(by='Score', ascending=False).style.background_gradient(cmap='Greens',subset = ['Score'])   
 
 
-# ## Random Forest Classifier Test Set
+# Da der AUC vom Precision Recall beim `Gradient Boosting Classifier` am Höchsten ist, entscheiden wir uns für dieses Modell für die Vorhersage der Zielvariable im Zuge des Deployments. 

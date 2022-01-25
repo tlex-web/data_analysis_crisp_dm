@@ -9,5 +9,3 @@ __pycache__
 
 # jupyter output files
 .ipynb_checkpoints
-*.html
-*.pdf

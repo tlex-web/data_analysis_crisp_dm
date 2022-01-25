@@ -1,0 +1,1 @@
+{"criterion": "squared_error", "learning_rate": 0.01, "loss": "deviance", "max_features": "auto", "min_samples_leaf": 2, "min_samples_split": 0.1, "n_estimators": 2750, "subsample": 0.65}

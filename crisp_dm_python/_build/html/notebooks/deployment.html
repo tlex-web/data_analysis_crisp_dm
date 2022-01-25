@@ -1,0 +1,948 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deployment &#8212; CRISP-DM</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.d59cb220de22ca1c485ebbdc042f0030.js"></script>
+    <script async="async" src="https://unpkg.com/thebe@0.5.1/lib/index.js"></script>
+    <script>
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Quellen:" href="../quellen.html" />
+    <link rel="prev" title="Modelling" href="modelling.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/nextgen_logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">CRISP-DM</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="business_understanding.html">
+   Business Understanding
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="data_understanding.html">
+   Data Understanding
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="data_preparation.html">
+   Data Preparation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="modelling.html">
+   Modelling
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../quellen.html">
+   Quellen:
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/notebooks/deployment.ipynb"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.ipynb</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/tlex-web/data_analytics_crisp_dm"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/tlex-web/data_analytics_crisp_dm/issues/new?title=Issue%20on%20page%20%2Fnotebooks/deployment.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Launch interactive content"><i class="fas fa-rocket"></i></button>
+    <div class="dropdown-buttons">
+        
+        <a class="binder-button" href="https://mybinder.org/v2/gh/tlex-web/data_analytics_crisp_dm/main?urlpath=tree/docs/notebooks/deployment.ipynb"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Launch Binder" data-toggle="tooltip"
+                data-placement="left"><img class="binder-button-logo"
+                    src="../_static/images/logo_binder.svg"
+                    alt="Interact on binder">Binder</button></a>
+        
+        
+        
+        
+    </div>
+</div>
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#modelling">
+   Modelling
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Deployment</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#modelling">
+   Modelling
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+              <div>
+                
+  <div class="tex2jax_ignore mathjax_ignore section" id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h1>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span>  <span class="n">GradientBoostingClassifier</span>
+<span class="kn">import</span> <span class="nn">plotly.graph_objects</span> <span class="k">as</span> <span class="nn">go</span>
+<span class="kn">import</span> <span class="nn">plotly.express</span> <span class="k">as</span> <span class="nn">px</span>
+<span class="kn">import</span> <span class="nn">plotly.offline</span> <span class="k">as</span> <span class="nn">py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Hyperparamter einlesen</p>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;../data/gradient_boosting_classifier_hyper_params.json&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">hyper_params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Trainingsdaten für unser Modell einlesen</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X_train</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../data/x_train_clean.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">)</span> 
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../data/y_train_clean.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>   
+
+<span class="k">del</span> <span class="n">X_train</span><span class="p">[</span><span class="s1">&#39;Unnamed: 0&#39;</span><span class="p">]</span>
+<span class="k">del</span> <span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;Unnamed: 0&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Testdatensatz einlesen und für das Modelling vorbereiten</p>
+<div class="cell tag_hide-input docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../data/test.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;[,$]&#39;</span> <span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>
+
+<span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+<span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;gender&#39;</span><span class="p">:</span> <span class="s1">&#39;gender&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;age&#39;</span><span class="p">:</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;driving_license&#39;</span><span class="p">:</span> <span class="s1">&#39;driving_license&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;region_code&#39;</span><span class="p">:</span> <span class="s1">&#39;region_code&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;previously_insured&#39;</span><span class="p">:</span> <span class="s1">&#39;previously_insured&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vehicle_age&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle_age&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vehicle__damage&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle_damage&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;annual__premium&#39;</span><span class="p">:</span> <span class="s1">&#39;annual_premium&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">:</span> <span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vintage&#39;</span><span class="p">:</span> <span class="s1">&#39;vintage&#39;</span>
+<span class="p">},</span>
+    <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+
+<span class="n">df_one_hot_encoded_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;driving_license&#39;</span><span class="p">,</span> <span class="s1">&#39;gender&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_age&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_damage&#39;</span><span class="p">,</span><span class="s1">&#39;previously_insured&#39;</span><span class="p">])</span>
+
+<span class="n">df_one_hot_encoded_data</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;gender&#39;</span><span class="p">:</span> <span class="s1">&#39;gender&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;age&#39;</span><span class="p">:</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;driving_license_0&#39;</span><span class="p">:</span> <span class="s1">&#39;driving_license_No&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;driving_license_1&#39;</span><span class="p">:</span> <span class="s1">&#39;driving_license_Yes&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;region_code&#39;</span><span class="p">:</span> <span class="s1">&#39;region_code&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;previously_insured_0&#39;</span><span class="p">:</span> <span class="s1">&#39;previously_insured_No&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;previously_insured_1&#39;</span><span class="p">:</span> <span class="s1">&#39;previously_insured_Yes&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vehicle_age&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle_age&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vehicle_damage&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle_damage&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;annual_premium&#39;</span><span class="p">:</span> <span class="s1">&#39;annual_premium&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">:</span> <span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;vintage&#39;</span><span class="p">:</span> <span class="s1">&#39;vintage&#39;</span>
+<span class="p">},</span>
+    <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">df_one_hot_encoded_data</span> <span class="o">=</span> <span class="n">df_one_hot_encoded_data</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;region_code&#39;</span><span class="p">,</span> <span class="s1">&#39;annual_premium&#39;</span><span class="p">,</span> <span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">,</span> <span class="s1">&#39;vintage&#39;</span><span class="p">,</span> <span class="s1">&#39;driving_license_No&#39;</span><span class="p">,</span> <span class="s1">&#39;driving_license_Yes&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_age_1-2 Year&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_age_&lt; 1 Year&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_age_&gt; 2 Years&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_damage_No&#39;</span><span class="p">,</span> <span class="s1">&#39;vehicle_damage_Yes&#39;</span><span class="p">,</span> <span class="s1">&#39;previously_insured_No&#39;</span><span class="p">,</span> <span class="s1">&#39;previously_insured_Yes&#39;</span><span class="p">,</span> <span class="s1">&#39;gender_Female&#39;</span><span class="p">,</span> <span class="s1">&#39;gender_Male&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="modelling">
+<h2>Modelling<a class="headerlink" href="#modelling" title="Permalink to this headline">¶</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modell für den Gradient Boosting Classifier instanzieren</span>
+<span class="n">gbc</span> <span class="o">=</span> <span class="n">GradientBoostingClassifier</span><span class="p">(</span><span class="o">**</span><span class="n">hyper_params</span> <span class="p">,</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Datensatz vorbereiten</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">df_one_hot_encoded_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Modell fitten</span>
+<span class="n">fit_gbc</span> <span class="o">=</span> <span class="n">gbc</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">])</span>
+
+<span class="c1"># Vorhersagen </span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">fit_gbc</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">y_pred</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
+<span class="o">~</span>\<span class="n">AppData</span>\<span class="n">Local</span>\<span class="n">Temp</span><span class="o">/</span><span class="n">ipykernel_26988</span><span class="o">/</span><span class="mf">3792884513.</span><span class="n">py</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+<span class="g g-Whitespace">      </span><span class="mi">6</span> 
+<span class="g g-Whitespace">      </span><span class="mi">7</span> <span class="c1"># Modell fitten</span>
+<span class="ne">----&gt; </span><span class="mi">8</span> <span class="n">fit_gbc</span> <span class="o">=</span> <span class="n">gbc</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">])</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> 
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="c1"># Vorhersagen</span>
+
+<span class="nn">~\Documents_\Hochschule\Data Analysis Hausarbeit\Hausarbeit\venv\lib\site-packages\sklearn\ensemble\_gb.py</span> in <span class="ni">fit</span><span class="nt">(self, X, y, sample_weight, monitor)</span>
+<span class="g g-Whitespace">    </span><span class="mi">584</span> 
+<span class="g g-Whitespace">    </span><span class="mi">585</span>         <span class="c1"># fit the boosting stages</span>
+<span class="ne">--&gt; </span><span class="mi">586</span>         <span class="n">n_stages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_stages</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">587</span>             <span class="n">X</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">588</span>             <span class="n">y</span><span class="p">,</span>
+
+<span class="nn">~\Documents_\Hochschule\Data Analysis Hausarbeit\Hausarbeit\venv\lib\site-packages\sklearn\ensemble\_gb.py</span> in <span class="ni">_fit_stages</span><span class="nt">(self, X, y, raw_predictions, sample_weight, random_state, X_val, y_val, sample_weight_val, begin_at_stage, monitor)</span>
+<span class="g g-Whitespace">    </span><span class="mi">661</span> 
+<span class="g g-Whitespace">    </span><span class="mi">662</span>             <span class="c1"># fit next stage of trees</span>
+<span class="ne">--&gt; </span><span class="mi">663</span>             <span class="n">raw_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_stage</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">664</span>                 <span class="n">i</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">665</span>                 <span class="n">X</span><span class="p">,</span>
+
+<span class="nn">~\Documents_\Hochschule\Data Analysis Hausarbeit\Hausarbeit\venv\lib\site-packages\sklearn\ensemble\_gb.py</span> in <span class="ni">_fit_stage</span><span class="nt">(self, i, X, y, raw_predictions, sample_weight, sample_mask, random_state, X_csc, X_csr)</span>
+<span class="g g-Whitespace">    </span><span class="mi">244</span> 
+<span class="g g-Whitespace">    </span><span class="mi">245</span>             <span class="n">X</span> <span class="o">=</span> <span class="n">X_csr</span> <span class="k">if</span> <span class="n">X_csr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X</span>
+<span class="ne">--&gt; </span><span class="mi">246</span>             <span class="n">tree</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">check_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">247</span> 
+<span class="g g-Whitespace">    </span><span class="mi">248</span>             <span class="c1"># update tree leaves</span>
+
+<span class="nn">~\Documents_\Hochschule\Data Analysis Hausarbeit\Hausarbeit\venv\lib\site-packages\sklearn\tree\_classes.py</span> in <span class="ni">fit</span><span class="nt">(self, X, y, sample_weight, check_input, X_idx_sorted)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1313</span>         <span class="s2">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">   </span><span class="mi">1314</span><span class="s2"> </span>
+<span class="ne">-&gt; </span><span class="mi">1315</span><span class="s2">         super().fit(</span>
+<span class="g g-Whitespace">   </span><span class="mi">1316</span><span class="s2">             X,</span>
+<span class="g g-Whitespace">   </span><span class="mi">1317</span><span class="s2">             y,</span>
+
+<span class="nn">~\Documents_\Hochschule\Data Analysis Hausarbeit\Hausarbeit\venv\lib\site-packages\sklearn\tree\_classes.py</span> in <span class="ni">fit</span><span class="nt">(self, X, y, sample_weight, check_input, X_idx_sorted)</span>
+<span class="g g-Whitespace">    </span><span class="mi">418</span><span class="s2">             )</span>
+<span class="g g-Whitespace">    </span><span class="mi">419</span><span class="s2"> </span>
+<span class="ne">--&gt; </span><span class="mi">420</span><span class="s2">         builder.build(self.tree_, X, y, sample_weight)</span>
+<span class="g g-Whitespace">    </span><span class="mi">421</span><span class="s2"> </span>
+<span class="g g-Whitespace">    </span><span class="mi">422</span><span class="s2">         if self.n_outputs_ == 1 and is_classifier(self):</span>
+
+<span class="ne">KeyboardInterrupt</span>: 
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Data Frame mit den Vorhersagen erstellen</span>
+<span class="n">df_y_pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">])</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">df_y_pred</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">res</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0    0.972119
+1    0.027881
+Name: y_pred, dtype: float64
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+
+<span class="c1"># Data Frame mit den Daten der positiven Klasse erstellen</span>
+<span class="n">df_positive</span> <span class="o">=</span> <span class="n">df_pred</span><span class="p">[</span><span class="n">df_pred</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">df_positive</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>min</th>
+      <th>25%</th>
+      <th>50%</th>
+      <th>75%</th>
+      <th>max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>id</th>
+      <td>3545.0</td>
+      <td>445047.196897</td>
+      <td>36369.418089</td>
+      <td>381012.0</td>
+      <td>413414.0</td>
+      <td>446145.0</td>
+      <td>475306.0</td>
+      <td>508128.0</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>3545.0</td>
+      <td>41.444288</td>
+      <td>8.588197</td>
+      <td>22.0</td>
+      <td>35.0</td>
+      <td>41.0</td>
+      <td>46.0</td>
+      <td>84.0</td>
+    </tr>
+    <tr>
+      <th>driving_license</th>
+      <td>3545.0</td>
+      <td>0.970381</td>
+      <td>0.169558</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>region_code</th>
+      <td>3545.0</td>
+      <td>26.305783</td>
+      <td>9.883499</td>
+      <td>0.0</td>
+      <td>28.0</td>
+      <td>28.0</td>
+      <td>28.0</td>
+      <td>51.0</td>
+    </tr>
+    <tr>
+      <th>previously_insured</th>
+      <td>3545.0</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>annual_premium</th>
+      <td>3545.0</td>
+      <td>35673.283216</td>
+      <td>17247.052103</td>
+      <td>2630.0</td>
+      <td>27850.0</td>
+      <td>35041.0</td>
+      <td>44596.0</td>
+      <td>195863.0</td>
+    </tr>
+    <tr>
+      <th>policy_sales_channel</th>
+      <td>3545.0</td>
+      <td>98.512835</td>
+      <td>60.382219</td>
+      <td>1.0</td>
+      <td>26.0</td>
+      <td>124.0</td>
+      <td>156.0</td>
+      <td>163.0</td>
+    </tr>
+    <tr>
+      <th>vintage</th>
+      <td>3545.0</td>
+      <td>148.228773</td>
+      <td>85.748483</td>
+      <td>10.0</td>
+      <td>72.0</td>
+      <td>147.0</td>
+      <td>219.0</td>
+      <td>299.0</td>
+    </tr>
+    <tr>
+      <th>y_pred</th>
+      <td>3545.0</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># DataFrame von der Variable response erzeugen</span>
+<span class="n">df_pred_response</span> <span class="o">=</span> <span class="n">df_pred</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;y_pred&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">df_pred_response</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_pred_response</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;str&#39;</span><span class="p">)</span>
+
+<span class="c1"># Barplot der prozentualen Anteile in der Ausprägung von response erstellen</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">df_pred_response</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;y_pred&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">df_pred</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;y_pred&#39;</span><span class="p">,</span>
+             <span class="n">text</span><span class="o">=</span><span class="n">df_pred</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                 <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">%&#39;</span><span class="p">),</span>
+             <span class="n">color_discrete_map</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="s1">&#39;rgb(18,116,117)&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="s1">&#39;rgb(20,29,67)&#39;</span>
+<span class="p">})</span>
+
+<span class="c1"># Achsenbeschriftung hinzufügen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Relative Verteilung der Predictions&#39;</span><span class="p">,</span>
+                  <span class="n">xaxis_title</span><span class="o">=</span><span class="s1">&#39;y_pred&#39;</span><span class="p">,</span>
+                  <span class="n">yaxis_title</span><span class="o">=</span><span class="s1">&#39;Count&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot erstellen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prozentuale Verteilung je Kategorie in region_code absteigend nach </span>
+<span class="c1"># den höchsten Werten in einem df ablegen</span>
+<span class="n">df_region_code</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">df_positive</span><span class="p">[</span><span class="s1">&#39;region_code&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="n">trace</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># Barchart für die Verteilung in der Variable region_code insgesamt erstellen</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">df_region_code</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+           <span class="n">y</span><span class="o">=</span><span class="n">df_region_code</span><span class="p">[</span><span class="s1">&#39;region_code&#39;</span><span class="p">],</span>
+           <span class="n">opacity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;total&quot;</span><span class="p">,</span>
+           <span class="n">hoverinfo</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+           <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+               <span class="n">color</span><span class="o">=</span><span class="n">df_region_code</span><span class="p">[</span><span class="s1">&#39;region_code&#39;</span><span class="p">],</span>
+               <span class="n">colorscale</span><span class="o">=</span><span class="s1">&#39;ice&#39;</span><span class="p">,</span>
+               <span class="n">reversescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">showscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+           <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># Layout des Plots definieren</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Region Code Verteilung&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">.95</span><span class="p">),</span>
+                   <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s1">&#39;rgb(240, 240, 240)&#39;</span><span class="p">,</span>
+                   <span class="n">autosize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Region Code&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+                              <span class="n">tickmode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">),</span>
+                   <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">17</span><span class="p">)),</span>
+                   <span class="p">)</span>
+
+<span class="c1"># Plot erstellen</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">trace</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prozentuale Verteilung je Kategorie in vehicle age absteigend nach </span>
+<span class="c1"># den höchsten Werten in einem df ablegen</span>
+<span class="n">df_vehicle_age</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">df_positive</span><span class="p">[</span><span class="s1">&#39;vehicle_age&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="c1"># Hier spezifizieren wir für gesamt, male und female jeweils einen Bar Chart</span>
+<span class="n">trace</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1">#Bar Chart für gesamt</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">df_vehicle_age</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+           <span class="n">y</span><span class="o">=</span><span class="n">df_vehicle_age</span><span class="p">[</span><span class="s1">&#39;vehicle_age&#39;</span><span class="p">],</span>
+           <span class="n">opacity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;total&quot;</span><span class="p">,</span>
+           <span class="n">hoverinfo</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+           <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+               <span class="n">color</span><span class="o">=</span><span class="n">df_vehicle_age</span><span class="p">[</span><span class="s1">&#39;vehicle_age&#39;</span><span class="p">],</span>
+               <span class="n">colorscale</span><span class="o">=</span><span class="s1">&#39;ice&#39;</span><span class="p">,</span>
+               <span class="n">reversescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">showscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+           <span class="p">)</span>
+<span class="p">]</span>
+
+<span class="c1"># Layout konfigurieren</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Vehicle Age&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">.95</span><span class="p">),</span>
+                   <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s1">&#39;rgb(240, 240, 240)&#39;</span><span class="p">,</span>
+                   <span class="n">autosize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;vehicle_age&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span>
+                              <span class="n">tickmode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">),</span>
+                   <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)),</span>
+                   <span class="p">)</span>
+
+<span class="c1"># Plot erzeugen</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">trace</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Absolute Anzahl von Male und Female in dff abspeichern</span>
+<span class="n">dff</span> <span class="o">=</span> <span class="n">df_positive</span><span class="p">[</span><span class="s1">&#39;gender&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span> 
+
+<span class="c1"># Label für den Pie chart festlegen</span>
+<span class="n">label</span> <span class="o">=</span> <span class="n">dff</span><span class="o">.</span><span class="n">index</span>
+
+<span class="c1"># Summe der Ausprägungen je Label</span>
+<span class="n">size</span> <span class="o">=</span> <span class="n">dff</span><span class="o">.</span><span class="n">values</span>
+
+<span class="c1"># Farben definieren und pie chart erzeugen</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rgb(20,29,67)&#39;</span><span class="p">,</span> <span class="s1">&#39;rgb(18,116,117)&#39;</span><span class="p">]</span>
+<span class="n">trace</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Pie</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">),</span> <span class="n">hole</span><span class="o">=</span><span class="mf">.2</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">trace</span><span class="p">]</span>
+
+<span class="c1"># Titel hinzufügen</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Geschlechtsverteilung&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot erzeugen mit den zuvor definierten Spezifikationen</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prozentuale Verteilung je Kategorie in policy_sales_channel absteigend nach </span>
+<span class="c1"># den höchsten Werten in einem df ablegen</span>
+
+<span class="n">df_policy_sales_channel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+<span class="n">df_policy_sales_channel</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">df_positive</span><span class="p">[</span><span class="s1">&#39;policy_sales_channel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">df_policy_sales_channel</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Channel&#39;</span><span class="p">,</span> <span class="s1">&#39;percentage&#39;</span><span class="p">]</span>
+<span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;Channel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;Channel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;str&#39;</span><span class="p">)</span>
+<span class="n">df_percentage_index</span> <span class="o">=</span> <span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;percentage&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.02</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+
+<span class="n">df_policy_sales_channel</span> <span class="o">=</span> <span class="n">df_policy_sales_channel</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">df_percentage_index</span><span class="p">)</span>
+
+<span class="n">trace</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># Barchart für die Verteilung insgesamt</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;Channel&#39;</span><span class="p">],</span>
+           <span class="n">y</span><span class="o">=</span><span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;percentage&#39;</span><span class="p">],</span>
+           <span class="n">text</span><span class="o">=</span><span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;percentage&#39;</span><span class="p">],</span>
+           <span class="n">textposition</span><span class="o">=</span><span class="s2">&quot;outside&quot;</span><span class="p">,</span>
+           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;total&quot;</span><span class="p">,</span>
+           <span class="n">hoverinfo</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+           <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+               <span class="n">color</span><span class="o">=</span><span class="n">df_policy_sales_channel</span><span class="p">[</span><span class="s1">&#39;percentage&#39;</span><span class="p">],</span>
+               <span class="n">colorscale</span><span class="o">=</span><span class="s1">&#39;ice&#39;</span><span class="p">,</span>
+               <span class="n">reversescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">showscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+           <span class="p">)</span>
+<span class="p">]</span>
+
+
+<span class="c1"># Layout des Plots definieren</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Policy Sales Channel&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">.95</span><span class="p">),</span>
+                   <span class="n">yaxis_range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">.4</span><span class="p">],</span>
+                   <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s1">&#39;rgb(240, 240, 240)&#39;</span><span class="p">,</span>
+                   <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Policy Sales Channel&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+                              <span class="n">tickmode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">),</span>
+                   <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">,</span>
+                              <span class="n">titlefont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">17</span><span class="p">)),</span>
+                   <span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">trace</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+<span class="n">py</span><span class="o">.</span><span class="n">iplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># DataFrame mit den Variablen age und response erstellen</span>
+<span class="n">df_age_response</span> <span class="o">=</span> <span class="n">df_pred</span><span class="p">[[</span><span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;y_pred&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;ffill&#39;</span><span class="p">)</span>
+
+<span class="c1"># </span>
+<span class="n">age_response_yes</span> <span class="o">=</span> <span class="n">df_age_response</span><span class="p">[</span><span class="n">df_age_response</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># Age = response ist no</span>
+<span class="n">age_response_no</span> <span class="o">=</span> <span class="n">df_age_response</span><span class="p">[</span><span class="n">df_age_response</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="n">dmax</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">dmin</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1"># Histogram erstellen</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">df_age_response</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;y_pred&quot;</span><span class="p">,</span>
+                   <span class="n">marginal</span><span class="o">=</span><span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="n">histnorm</span><span class="o">=</span><span class="s1">&#39;percent&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;overlay&#39;</span><span class="p">)</span>  <span class="c1"># man kann auch stacked verwenden</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span><span class="n">opacity</span><span class="o">=</span><span class="mf">0.65</span><span class="p">)</span>
+
+<span class="c1"># Mean age von response = &quot;yes&quot; hinzufügen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_yes</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_yes</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">])],</span>
+                         <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">dmin</span><span class="p">,</span> <span class="n">dmax</span><span class="p">],</span>
+                         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">.4</span><span class="p">,</span>
+                         <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1f77b4&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s1">&#39;dash&#39;</span><span class="p">),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Mean: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_yes</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+              <span class="p">)</span>
+
+<span class="c1"># Mean age von response = &quot;no&quot; hinzufügen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_no</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_no</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">])],</span>
+                         <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">dmin</span><span class="p">,</span> <span class="n">dmax</span><span class="p">],</span>
+                         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span>
+                         <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;rgba(248, 118, 109, 0.5)&#39;</span><span class="p">,</span>
+                                   <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s1">&#39;dash&#39;</span><span class="p">),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Mean: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">age_response_no</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+              <span class="p">)</span>
+
+<span class="c1"># Skalierung der Achsen anpassen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">xaxis_type</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">yaxis_type</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Normalisiertes Historgram der Variable Age nach der Zielvariable&#39;</span><span class="p">)</span>
+
+<span class="c1"># Generate Plot</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Data Frame mit den Beiden variablen erzeugen</span>
+<span class="n">df_annual_premium</span> <span class="o">=</span> <span class="n">df_pred</span><span class="p">[[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">,</span> <span class="s1">&#39;y_pred&#39;</span><span class="p">]]</span>
+
+<span class="n">df_annual_premium</span><span class="p">[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_annual_premium</span><span class="p">[[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">]]</span>
+
+<span class="c1"># annual_premium = response ist yes</span>
+<span class="n">annual_premium_response_yes</span> <span class="o">=</span> <span class="n">df_annual_premium</span><span class="p">[</span><span class="n">df_annual_premium</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># annual_premium = response ist no</span>
+<span class="n">annual_premium_response_no</span> <span class="o">=</span> <span class="n">df_annual_premium</span><span class="p">[</span><span class="n">df_annual_premium</span><span class="p">[</span><span class="s1">&#39;y_pred&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Histogram definieren</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">df_annual_premium</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;annual_premium&quot;</span><span class="p">,</span>
+                   <span class="n">color</span><span class="o">=</span><span class="s2">&quot;y_pred&quot;</span><span class="p">,</span> <span class="n">marginal</span><span class="o">=</span><span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="n">histnorm</span><span class="o">=</span><span class="s1">&#39;percent&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;overlay&#39;</span><span class="p">)</span>  <span class="c1"># man kann auch stacked verwenden</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span><span class="n">opacity</span><span class="o">=</span><span class="mf">0.65</span><span class="p">)</span>
+
+<span class="c1"># Mittlewert age von response = &quot;yes&quot;</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_yes</span><span class="p">[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_yes</span><span class="p">[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">])],</span>
+                         <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+                         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">.4</span><span class="p">,</span>
+                         <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;#1f77b4&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s1">&#39;dash&#39;</span><span class="p">),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Median: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_yes</span><span class="p">[</span><span class="s2">&quot;annual_premium&quot;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+              <span class="p">)</span>
+
+<span class="c1"># Mittlewert annual_premium von response = &quot;no&quot;</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_no</span><span class="p">[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_no</span><span class="p">[</span><span class="s1">&#39;annual_premium&#39;</span><span class="p">])],</span>
+                         <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+                         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span>
+                         <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;rgba(248, 118, 109, 0.5)&#39;</span><span class="p">,</span>
+                                   <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s1">&#39;dash&#39;</span><span class="p">),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Median: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">annual_premium_response_no</span><span class="p">[</span><span class="s2">&quot;annual_premium&quot;</span><span class="p">]),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+              <span class="p">)</span>
+
+<span class="c1"># Sklaierung der Achsen anpassen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">xaxis_type</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">yaxis_type</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+
+<span class="c1"># Überschrift hinzufügen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Normalisiertes Historgram der Variable Annual_Premium nach der Zielvariable&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot erzeugen</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>C:\Users\aster\AppData\Local\Temp/ipykernel_15208/1520847085.py:4: SettingWithCopyWarning:
+
+
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./notebooks"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+            
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="modelling.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Modelling</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../quellen.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Quellen:</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            
+        </div>
+    </div>
+    <footer class="footer">
+  <p>
+    
+      By Marc Bösen, Tim Lui<br/>
+    
+        &copy; Copyright 2021.<br/>
+  </p>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+
+  </body>
+</html>
